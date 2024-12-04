@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="shortcut icon" href="https://s3.amazonaws.com/django-blog/ico/favicon_v2.ico">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial;
+            padding: 10px;
+            background: #f1f1f1;
+        }
+        .header {
+            text-align: center;
+            background: white;
+        }
+        .header h1 {
+            font-size: 30px;
+        }
+        .topnav {
+            overflow: hidden;
+            background-color: #333;
+        }
+        .topnav a {
+            float: left;
+            display: block;
+            color: #f2f2f2;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+        .topnav a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+        .row {
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: space-between;
+        }
+        .leftcolumn {
+            flex: 60%;
+        }
+        .rightcolumn {
+            flex: 40%;
+            background-color: #f1f1f1;
+            padding: 20px;
+        }
+        .card {
+            background-color: white;
+            padding: 20px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+        }
+        canvas {
+            display: block;
+            margin: auto;
+            width: 100%; /* Full width inside its container */
+            height: 400px; /* Fixed height for the graph */
+        }
+        .form-control {
+            margin: 10px 0;
+        }
+        .form-control label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-control input,
+        .form-control select,
+        .form-control button {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+        }
+    </style>
+    <title>Historical Data for Robot: {{nID}}</title>
+</head>
+<body>
+    <div class="header">
+        <h1>Historical Data for Robot: {{nID}}</h1>
+    </div>
+    <div class="topnav">
+        <a href="/dashboard?nID={{nID}}">Dashboard</a>
+        <a href="/measurement-history?nID={{nID}}">Historical Data</a>
+        <a href="/event-history?nID={{nID}}">Alarms & Events History</a>
+    </div>
+    <div class="row">
+        <!-- Graph on the left -->
+        <div class="leftcolumn">
+            <div class="card">
+                <canvas id="historicalChart"></canvas>
+            </div>
+        </div>
+        <!-- Settings on the right -->
+        <div class="rightcolumn">
+            <div class="card">
+                <h2>View Historical Data</h2>
+                <div class="form-control">
+                    <label for="sensorSelect">Select Sensor:</label>
+                    <select id="sensorSelect">
+                        <option value="1">Sensor 1</option>
+                        <option value="2">Sensor 2</option>
+                        <option value="3">Sensor 3</option>
+                        <option value="4">Sensor 4</option>
+                        <option value="5">Sensor 5</option>
+                        <option value="6">Sensor 6</option>
+                        <option value="7">Sensor 7</option>
+                        <option value="8">Sensor 8</option>
+                        <option value="9">Sensor 9</option>
+                        <option value="10">Sensor 10</option>
+                    </select>
+                </div>
+                <div class="form-control">
+                    <label for="startDate">From:</label>
+                    <input type="datetime-local" id="startDate">
+                </div>
+                <div class="form-control">
+                    <label for="endDate">To:</label>
+                    <input type="datetime-local" id="endDate">
+                </div>
+                <button type="button" onclick="fetchHistoricalData()">Show Data</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let historicalChart = null;
+
+        // Create the chart for historical data
+        function createHistoricalChart() {
+            const ctx = document.getElementById('historicalChart').getContext('2d');
+            historicalChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Sensor Data',
+                        data: [],
+                        borderColor: 'blue',
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { title: { display: true, text: 'Time' } },
+                        y: { title: { display: true, text: 'Value' } }
+                    }
+                }
+            });
+        }
+
+        // Fetch historical data based on selected sensor and date range
+        function fetchHistoricalData() {
+            const sensorId = document.getElementById('sensorSelect').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!startDate || !endDate) {
+                alert('Please select both start and end dates.');
+                return;
+            }
+
+            // Fetch data from the backend API
+            const url = `http://127.0.0.1:5000/robots/{{nID}}/history?sensor=${sensorId}&start=${startDate}&end=${endDate}`;
+            $.get(url, function (data) {
+                try {
+                    const parsedData = JSON.parse(data);
+                    updateHistoricalChart(parsedData);
+                } catch (err) {
+                    console.error("Error parsing data:", err);
+                }
+            }).fail(function () {
+                console.error("Failed to fetch historical data.");
+            });
+        }
+
+        // Update the historical chart with new data
+        function updateHistoricalChart(data) {
+            const labels = data.map(entry => new Date(entry.timestamp).toLocaleString());
+            const values = data.map(entry => entry.value);
+
+            historicalChart.data.labels = labels;
+            historicalChart.data.datasets[0].data = values;
+            historicalChart.update();
+        }
+
+        // Initialize the chart on page load
+        $(document).ready(function () {
+            createHistoricalChart();
+        });
+    </script>
+</body>
+</html>

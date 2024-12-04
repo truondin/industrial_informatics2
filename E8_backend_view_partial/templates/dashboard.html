@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="shortcut icon" href="https://s3.amazonaws.com/django-blog/ico/favicon_v2.ico">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial;
+            padding: 10px;
+            background: #f1f1f1;
+        }
+        .header {
+            text-align: center;
+            background: white;
+        }
+        .header h1 {
+            font-size: 30px;
+        }
+        .topnav {
+            overflow: hidden;
+            background-color: #333;
+        }
+        .topnav a {
+            float: left;
+            display: block;
+            color: #f2f2f2;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+        .topnav a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+        .leftcolumn {
+            float: left;
+            width: 60%;
+        }
+        .rightcolumn {
+            float: left;
+            width: 40%;
+            background-color: #f1f1f1;
+            padding-left: 20px;
+        }
+        .card {
+            background-color: white;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .sensor-graph {
+            margin: 20px 0;
+        }
+        .sensor-data {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: white;
+            border: 1px solid #ddd;
+        }
+        .sensor-data h3 {
+            margin: 0;
+        }
+        .row:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+    </style>
+    <title>Dashboard for Robot: {{nID}}</title>
+</head>
+<body>
+    <div class="header">
+        <h1>Dashboard for Robot: {{nID}}</h1>
+    </div>
+    <div class="topnav">
+        <a href="/dashboard?nID={{nID}}">Dashboard</a>
+        <a href="/measurement-history?nID={{nID}}">Historical Data</a>
+        <a href="/event-history?nID={{nID}}">Alarms & Events History</a>
+    </div>
+    <div class="row">
+        <!-- Graphs for each sensor -->
+        <div class="leftcolumn">
+            <div class="card">
+                <h2>Real-Time Data (Sensor Graphs)</h2>
+                <div id="sensorGraphs">
+                    <!-- Individual graphs will be rendered here -->
+                </div>
+            </div>
+        </div>
+        <!-- Sensor data on the right -->
+        <div class="rightcolumn">
+            <div class="card">
+                <h2>Sensor Data</h2>
+                <div id="sensorDataContainer">
+                    <!-- Numerical values for each sensor will be displayed here -->
+                </div>
+            </div>
+            <div class="card">
+                <button type="button" onclick="getRemoteData()">Get Remote Data</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        let charts = []; // Array to store chart instances
+
+        // Initialize 10 charts (one for each sensor)
+        function createSensorGraphs() {
+            const graphContainer = document.getElementById('sensorGraphs');
+            for (let i = 0; i < 10; i++) {
+                const canvas = document.createElement('canvas');
+                canvas.id = `sensorChart${i}`;
+                canvas.className = 'sensor-graph';
+                graphContainer.appendChild(canvas);
+
+                const ctx = canvas.getContext('2d');
+                const chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: `Sensor ${i + 1}`,
+                            data: [],
+                            borderColor: `hsl(${(i * 36) % 360}, 70%, 50%)`,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: { title: { display: true, text: 'Time' } },
+                            y: { title: { display: true, text: 'Value' } }
+                        }
+                    }
+                });
+
+                charts.push(chart); // Store chart instance for updates
+            }
+        }
+
+        // Update each chart with new data
+        function updateSensorGraphs(data) {
+            const now = new Date().toLocaleTimeString();
+
+            data.forEach((sensor, index) => {
+                const chart = charts[index];
+                chart.data.labels.push(now);
+                if (chart.data.labels.length > 20) {
+                    chart.data.labels.shift(); // Remove the oldest label
+                }
+
+                chart.data.datasets[0].data.push(sensor.value);
+                if (chart.data.datasets[0].data.length > 20) {
+                    chart.data.datasets[0].data.shift(); // Remove the oldest data point
+                }
+
+                chart.update(); // Refresh the chart
+            });
+        }
+
+        // Update the right column with sensor data
+        function updateSensorData(data) {
+            const container = document.getElementById('sensorDataContainer');
+            container.innerHTML = ''; // Clear previous data
+            data.forEach((sensor, index) => {
+                const sensorDiv = document.createElement('div');
+                sensorDiv.classList.add('sensor-data');
+                sensorDiv.innerHTML = `<h3>Sensor ${index + 1}: ${sensor.value}</h3>`;
+                container.appendChild(sensorDiv);
+            });
+        }
+
+        // Fetch real-time data automatically
+        function fetchRealTimeData() {
+            $.get("http://127.0.0.1:5000/robots/{{nID}}/latest", function (data) {
+                const parsedData = JSON.parse(data);
+                updateSensorGraphs(parsedData);
+                updateSensorData(parsedData);
+            });
+        }
+
+        // Fetch real-time data manually (Get Remote Data button)
+        function getRemoteData() {
+            $.get("http://127.0.0.1:5000/robots/{{nID}}/latest", function (data) {
+                const parsedData = JSON.parse(data);
+                console.log("Remote data fetched successfully:", parsedData);
+                updateSensorGraphs(parsedData);
+                updateSensorData(parsedData);
+            });
+        }
+
+        // Initialize everything on page load
+        $(document).ready(function () {
+            createSensorGraphs();
+            setInterval(fetchRealTimeData, 1000); // Automatically fetch data every second
+        });
+    </script>
+</body>
+</html>

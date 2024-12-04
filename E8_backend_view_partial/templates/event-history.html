@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="shortcut icon" href="https://s3.amazonaws.com/django-blog/ico/favicon_v2.ico">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial;
+            padding: 10px;
+            background: #f1f1f1;
+        }
+        .header {
+            text-align: center;
+            background: white;
+        }
+        .header h1 {
+            font-size: 30px;
+        }
+        .topnav {
+            overflow: hidden;
+            background-color: #333;
+        }
+        .topnav a {
+            float: left;
+            display: block;
+            color: #f2f2f2;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+        .topnav a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+        .row {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: nowrap;
+        }
+        .leftcolumn {
+            flex: 60%;
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+        .rightcolumn {
+            flex: 40%;
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+        canvas {
+            display: block;
+            margin: auto;
+            width: 80%;
+            height: 300px;
+        }
+        .form-control {
+            margin: 10px 0;
+        }
+        .form-control label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-control input,
+        .form-control select,
+        .form-control button {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .filter {
+            margin-bottom: 20px;
+        }
+    </style>
+    <title>Alarms & KPIs for Robot: {{nID}}</title>
+</head>
+<body>
+    <div class="header">
+        <h1>Alarms & KPIs for Robot: {{nID}}</h1>
+    </div>
+    <div class="topnav">
+        <a href="/dashboard?nID={{nID}}">Dashboard</a>
+        <a href="/measurement-history?nID={{nID}}">Historical Data</a>
+        <a href="/event-history?nID={{nID}}">Alarms & Events History</a>
+    </div>
+    <div class="row">
+        <!-- KPIs and Pie Chart on the left -->
+        <div class="leftcolumn">
+            <div class="card">
+                <h2>KPIs for Filtered Data</h2>
+                <canvas id="kpiPieChart"></canvas>
+                <div class="form-control">
+                    <label for="stateFilter">Filter by State:</label>
+                    <select id="stateFilter">
+                        <option value="all">All</option>
+                        <option value="low">Low</option>
+                        <option value="normal">Normal</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div class="form-control">
+                    <label for="startDate">From:</label>
+                    <input type="datetime-local" id="startDate">
+                </div>
+                <div class="form-control">
+                    <label for="endDate">To:</label>
+                    <input type="datetime-local" id="endDate">
+                </div>
+                <button type="button" onclick="fetchKPIData()">Show KPIs</button>
+            </div>
+        </div>
+
+        <!-- Alarms Table on the right -->
+        <div class="rightcolumn">
+            <div class="card">
+                <h2>Alarms & Events</h2>
+                <div class="filter">
+                    <label for="priorityFilter">Filter by Priority:</label>
+                    <select id="priorityFilter">
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+                <table id="alarmsTable">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Priority</th>
+                            <th>Message</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Alarms data will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let kpiPieChart = null;
+
+        // Create the KPI pie chart
+        function createKpiPieChart() {
+            const ctx = document.getElementById('kpiPieChart').getContext('2d');
+            kpiPieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Low', 'Normal', 'High'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: ['#ffb90f', '#66cd00', '#ff4040']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    return tooltipItem.label + ': ' + tooltipItem.raw + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Fetch filtered KPI data for pie chart
+        function fetchKPIData() {
+            const state = document.getElementById('stateFilter').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!startDate || !endDate) {
+                alert('Please select both start and end dates.');
+                return;
+            }
+
+            // API request for KPI data
+            const url = `http://127.0.0.1:5000/robots/{{nID}}/kpi?state=${state}&start=${startDate}&end=${endDate}`;
+            $.get(url, function (data) {
+                try {
+                    const parsedData = JSON.parse(data);
+                    updateKPIChart(parsedData);
+                    updateAlarmsTable(parsedData.alarms);
+                } catch (err) {
+                    console.error("Error parsing data:", err);
+                }
+            }).fail(function () {
+                console.error("Failed to fetch KPI data.");
+            });
+        }
+
+        // Update the KPI Pie Chart with data
+        function updateKPIChart(data) {
+            const total = data.low + data.normal + data.high;
+            const lowPercentage = (data.low / total) * 100 || 0;
+            const normalPercentage = (data.normal / total) * 100 || 0;
+            const highPercentage = (data.high / total) * 100 || 0;
+
+            kpiPieChart.data.datasets[0].data = [lowPercentage, normalPercentage, highPercentage];
+            kpiPieChart.update();
+        }
+
+        // Update the alarms table with data
+        function updateAlarmsTable(alarms) {
+            const tableBody = document.getElementById('alarmsTable').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = ''; // Clear previous rows
+
+            alarms.forEach(alarm => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${new Date(alarm.timestamp).toLocaleString()}</td>
+                    <td>${alarm.priority}</td>
+                    <td>${alarm.message}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Initialize the pie chart on page load
+        $(document).ready(function () {
+            createKpiPieChart();
+        });
+    </script>
+</body>
+</html>

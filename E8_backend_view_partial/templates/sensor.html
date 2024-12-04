@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sensor Data</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <h1>Sensor Data</h1>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/mqtt">MQTT Simulator</a>
+            <a href="/sensor">Sensor Data</a>
+        </nav>
+    </header>
+    <main>
+        <h2>View Sensor Data</h2>
+        <form>
+            <label for="sensorId">Sensor ID:</label>
+            <input type="text" id="sensorId" name="sensorId">
+            <button type="button" onclick="fetchSensorData()">Fetch Data</button>
+        </form>
+        <div id="sensorData"></div>
+    </main>
+    <script src="/static/script.js"></script>
+</body>
+</html>
