@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="MAIN" Id="{2af31032-8259-45cf-8681-dab57608e6fa}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	fb_Measurement1: FB_Measurement;
+	fb_Measurement2: FB_Measurement;
+	fb_Measurement3: FB_Measurement;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[fb_Measurement1(
+	// Measurement settings
+	nHighLevel:=20, 
+	nLowLevel:=5, 
+	nHighDuration:=T#5S, 
+	nLowDuration:=T#5S,
+	nRandomizerSeedValue := 10, 
+	delayTimeAfterAddOrSub :=T#100MS,
+	nStepValueMult :=1,
+	// Measurement value
+	nMeasValue=>GVL.nMeasurement1);
+	
+fb_Measurement2(
+	nHighLevel:=30, 
+	nLowLevel:=-30, 
+	nHighDuration:=T#5S, 
+	nLowDuration:=T#5S,
+	nRandomizerSeedValue := 7, 
+	delayTimeAfterAddOrSub :=T#100MS,
+	nStepValueMult :=0.1,
+	nMeasValue=>GVL.nMeasurement2);
+
+	
+fb_Measurement3(
+	nHighLevel:=-1, 
+	nLowLevel:=-7, 
+	nHighDuration:=T#5S, 
+	nLowDuration:=T#5S,
+	nRandomizerSeedValue := 42, 
+	delayTimeAfterAddOrSub :=T#100MS,
+	nStepValueMult :=0.01,
+	nMeasValue=>GVL.nMeasurement3);]]></ST>
+    </Implementation>
+    <LineIds Name="MAIN">
+      <LineId Id="21" Count="0" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="22" Count="3" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="45" Count="6" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="55" Count="8" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="54" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

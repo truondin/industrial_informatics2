@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_Measurement" Id="{84aa91e6-1997-47a5-bd02-94cb2f932d7a}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Measurement
+VAR_INPUT
+	nHighLevel : LREAL;
+	nLowLevel : REAL;
+	nHighDuration : TIME;
+	nLowDuration : TIME;
+	nRandomizerSeedValue : INT;
+	delayTimeAfterAddOrSub : TIME;
+	nStepValueMult : LREAL;
+END_VAR
+VAR_OUTPUT
+	nMeasValue : LREAL;
+END_VAR
+VAR
+	Randomizer : DRAND;
+	TON_HighDuration : TON;
+	TON_LowDuration : TON;
+	TON_delayBetweenAddOrSub : TON;
+	StayHighLevel : BOOL;
+	StayLowLevel  : BOOL;
+	is_measValueGoingUp : BOOL;
+	randNum : LREAL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// initialization
+TON_HighDuration.PT := nHighDuration;
+TON_LowDuration.PT := nHighDuration;
+Randomizer(Seed := nRandomizerSeedValue, Num => randNum);
+TON_delayBetweenAddOrSub.PT := delayTimeAfterAddOrSub;
+
+// adding delay between adding or subracting the measurement value
+TON_delayBetweenAddOrSub.IN := TRUE;
+IF TON_delayBetweenAddOrSub.Q THEN
+	TON_delayBetweenAddOrSub.IN := FALSE;
+END_IF
+
+// Increasing measurement value
+IF nMeasValue < nHighLevel AND NOT StayHighLevel AND is_measValueGoingUp THEN
+	IF TON_delayBetweenAddOrSub.Q THEN
+		nMeasValue := nMeasValue + nStepValueMult*randNum;
+	END_IF
+// Not changing measurement value when HighLevel value reached
+ELSIF nMeasValue > nHighLevel AND is_measValueGoingUp THEN
+	StayHighLevel := TRUE;
+	TON_HighDuration.IN := TRUE;
+	// Changing direction after nHighDuration
+	IF TON_HighDuration.Q = TRUE THEN
+		TON_HighDuration.IN := FALSE;
+		StayHighLevel := FALSE;
+		is_measValueGoingUp := FALSE;
+	END_IF
+END_IF
+
+// Decreasing measurement value
+IF nMeasValue > nLowLevel AND NOT StayLowLevel AND NOT is_measValueGoingUp THEN
+	IF TON_delayBetweenAddOrSub.Q THEN
+		nMeasValue := nMeasValue - nStepValueMult*randNum;
+	END_IF
+	
+// Not changing measurement value when LowLevel value reached
+ELSIF nMeasValue < nLowLevel AND NOT is_measValueGoingUp THEN
+	StayLowLevel := TRUE;
+	TON_LowDuration.IN := TRUE;
+	// Changing direction after nLowDuration
+	IF TON_LowDuration.Q = TRUE THEN
+		TON_LowDuration.IN := FALSE;
+		StayLowLevel := FALSE;
+		is_measValueGoingUp := TRUE;
+	END_IF
+END_IF
+
+
+// calling timers
+TON_HighDuration();
+TON_LowDuration();
+TON_delayBetweenAddOrSub();]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Measurement">
+      <LineId Id="810" Count="10" />
+      <LineId Id="822" Count="16" />
+      <LineId Id="840" Count="22" />
+      <LineId Id="131" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
