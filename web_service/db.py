@@ -61,6 +61,12 @@ def get_all_measurements():
         return c.fetchall()
 
 
+def get_measurements_by_sensor_id(sensor_id):
+    with _get_connection() as conn:
+        c = conn.cursor()
+        c.execute("SELECT * FROM measurement WHERE sensor_id=:id", {'id': sensor_id})
+        return c.fetchall()
+
 def get_all_sensors():
     with _get_connection() as conn:
         c = conn.cursor()
@@ -76,4 +82,26 @@ def get_measurements_in_time_range(start_time, end_time):
         WHERE time BETWEEN :start_time AND :end_time
         """
         c.execute(query, {'start_time': start_time, 'end_time': end_time})
+        return c.fetchall()
+
+
+def get_measurements_until(date):
+    with _get_connection() as conn:
+        c = conn.cursor()
+        query = """
+        SELECT * FROM measurement
+        WHERE time <= :date
+        """
+        c.execute(query, {'date': date})
+        return c.fetchall()
+
+
+def get_measurements_from(date):
+    with _get_connection() as conn:
+        c = conn.cursor()
+        query = """
+        SELECT * FROM measurement
+        WHERE time >= :date
+        """
+        c.execute(query, {'date': date})
         return c.fetchall()
