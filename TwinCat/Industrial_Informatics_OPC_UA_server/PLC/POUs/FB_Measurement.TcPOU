@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.8">
   <POU Name="FB_Measurement" Id="{84aa91e6-1997-47a5-bd02-94cb2f932d7a}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_Measurement
 VAR_INPUT
@@ -13,6 +13,8 @@ VAR_INPUT
 END_VAR
 VAR_OUTPUT
 	nMeasValue : LREAL;
+	nMeasValueTimestamp: STRING;
+	 F_GetSystemTime   : ULINT;
 END_VAR
 VAR
 	Randomizer : DRAND;
@@ -23,6 +25,8 @@ VAR
 	StayLowLevel  : BOOL;
 	is_measValueGoingUp : BOOL;
 	randNum : LREAL;
+    prevMeasValue: LREAL := 0.0;        // Previous measurement value
+
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -73,6 +77,24 @@ ELSIF nMeasValue < nLowLevel AND NOT is_measValueGoingUp THEN
 	END_IF
 END_IF
 
+// Call the FB_LocalSystemTime function block
+GVL.fbSystemTime(
+	sNetID:= , 
+	bEnable:= TRUE, 
+	dwCycle:= 1, 
+	dwOpt:= , 
+	tTimeout:= , 
+	bValid=> , 
+	systemTime=> , 
+	tzID=> );
+	
+	GVL.dtSystemTime := SYSTEMTIME_TO_STRING(GVL.fbSystemTime.systemTime);
+
+// Check if the measurement value has changed
+IF nMeasValue <> prevMeasValue THEN
+    nMeasValueTimestamp := GVL.dtSystemTime; // Update the timestamp
+    prevMeasValue := nMeasValue;        // Update the previous value
+END_IF
 
 // calling timers
 TON_HighDuration();
@@ -82,7 +104,14 @@ TON_delayBetweenAddOrSub();]]></ST>
     <LineIds Name="FB_Measurement">
       <LineId Id="810" Count="10" />
       <LineId Id="822" Count="16" />
-      <LineId Id="840" Count="22" />
+      <LineId Id="840" Count="17" />
+      <LineId Id="878" Count="0" />
+      <LineId Id="956" Count="0" />
+      <LineId Id="976" Count="7" />
+      <LineId Id="968" Count="0" />
+      <LineId Id="984" Count="1" />
+      <LineId Id="961" Count="4" />
+      <LineId Id="858" Count="4" />
       <LineId Id="131" Count="0" />
     </LineIds>
   </POU>

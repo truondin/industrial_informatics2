@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.8">
   <GVL Name="GVL" Id="{a24a31e1-8e76-4313-beef-3d2be2543e3a}">
     <Declaration><![CDATA[{attribute 'qualified_only'}
 VAR_GLOBAL
@@ -23,6 +23,32 @@ VAR_GLOBAL
 	nMeasurement9 : LREAL;
 	{attribute 'OPC.UA.DA' := '1'}
 	nMeasurement10: LREAL;
+	
+	fbSystemTime: FB_LocalSystemTime;  // Instance of FB_LocalSystemTime
+	{attribute 'OPC.UA.DA' := '1'}
+    dtSystemTime: STRING;       // Variable to store the current system time
+	
+	{attribute 'OPC.UA.DA' := '1'}
+	nMeasurement1_TimeStamp: STRING;
+	{attribute 'OPC.UA.DA' := '1'}
+	nMeasurement2_TimeStamp: STRING;
+	{attribute 'OPC.UA.DA' := '1'}
+	nMeasurement3_TimeStamp: STRING;
+	{attribute 'OPC.UA.DA' := '1'}
+	nMeasurement4_TimeStamp: STRING;
+	{attribute 'OPC.UA.DA' := '1'}
+	nMeasurement5_TimeStamp: STRING;
+	{attribute 'OPC.UA.DA' := '1'}
+	nMeasurement6_TimeStamp: STRING;
+	{attribute 'OPC.UA.DA' := '1'}
+	nMeasurement7_TimeStamp: STRING;
+	{attribute 'OPC.UA.DA' := '1'}
+	nMeasurement8_TimeStamp: STRING;
+	{attribute 'OPC.UA.DA' := '1'}
+	nMeasurement9_TimeStamp: STRING;
+	{attribute 'OPC.UA.DA' := '1'}
+	nMeasurement10_TimeStamp: STRING;
+
 END_VAR]]></Declaration>
   </GVL>
 </TcPlcObject>

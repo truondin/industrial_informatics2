@@ -28,26 +28,31 @@ except Exception as err:
 
 
 class EventHandler(object):
-    def __init__(self):
+    def __init__(self, sensor_id):
         client = mqtt.Client()
         client.connect(BROKER_IP)
         self.client = client
+        self.sensor_id = sensor_id
 
     # event handler function
     def datachange_notification(self, node, val, data):
         print(node, round(val, AMOUNT_OF_DIGITS))
-        sensor_id = 1
-        value = 10
 
-        self.client.publish("ii24/" + str(GROUP_ID) + "/sensor/" + str(sensor_id), value)
+        value = round(val, AMOUNT_OF_DIGITS)
+
+        self.client.publish("ii24/" + str(GROUP_ID) + "/sensor/" + str(self.sensor_id), value)
 
 
 if __name__ == '__main__':
     # get node data from your server
     tempNode = client.get_node("ns=4;s=GVL.nMeasurement1")
+    tempNode2 = client.get_node("ns=4;s=GVL.nMeasurement2")
     # handler
-    handler = EventHandler()
+    handler = EventHandler(1)
+    handler2 = EventHandler(2)
     # subscription object
     sub = client.create_subscription(500, handler)
+    sub2 = client.create_subscription(500, handler2)
     # node
     handle = sub.subscribe_data_change(tempNode)
+    handle2 = sub2.subscribe_data_change(tempNode2)

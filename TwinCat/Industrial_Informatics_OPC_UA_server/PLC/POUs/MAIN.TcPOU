@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.8">
   <POU Name="MAIN" Id="{2af31032-8259-45cf-8681-dab57608e6fa}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM MAIN
 VAR
@@ -12,14 +12,15 @@ END_VAR
       <ST><![CDATA[fb_Measurement1(
 	// Measurement settings
 	nHighLevel:=20, 
-	nLowLevel:=5, 
+	nLowLevel:=5 ,
 	nHighDuration:=T#5S, 
 	nLowDuration:=T#5S,
 	nRandomizerSeedValue := 10, 
 	delayTimeAfterAddOrSub :=T#100MS,
 	nStepValueMult :=1,
 	// Measurement value
-	nMeasValue=>GVL.nMeasurement1);
+	nMeasValue=>GVL.nMeasurement1,
+	nMeasValueTimestamp => GVL.nMeasurement1_TimeStamp);
 	
 fb_Measurement2(
 	nHighLevel:=30, 
@@ -29,8 +30,8 @@ fb_Measurement2(
 	nRandomizerSeedValue := 7, 
 	delayTimeAfterAddOrSub :=T#100MS,
 	nStepValueMult :=0.1,
-	nMeasValue=>GVL.nMeasurement2);
-
+	nMeasValue=>GVL.nMeasurement2,
+	nMeasValueTimestamp => GVL.nMeasurement2_TimeStamp);
 	
 fb_Measurement3(
 	nHighLevel:=-1, 
@@ -40,7 +41,8 @@ fb_Measurement3(
 	nRandomizerSeedValue := 42, 
 	delayTimeAfterAddOrSub :=T#100MS,
 	nStepValueMult :=0.01,
-	nMeasValue=>GVL.nMeasurement3);]]></ST>
+	nMeasValue=>GVL.nMeasurement3,
+	nMeasValueTimestamp => GVL.nMeasurement3_TimeStamp);]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
       <LineId Id="21" Count="0" />
@@ -51,13 +53,16 @@ fb_Measurement3(
       <LineId Id="82" Count="0" />
       <LineId Id="73" Count="0" />
       <LineId Id="13" Count="0" />
+      <LineId Id="89" Count="0" />
       <LineId Id="43" Count="0" />
       <LineId Id="45" Count="6" />
       <LineId Id="83" Count="0" />
       <LineId Id="44" Count="0" />
-      <LineId Id="55" Count="8" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="56" Count="7" />
       <LineId Id="84" Count="0" />
       <LineId Id="54" Count="0" />
+      <LineId Id="91" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>
