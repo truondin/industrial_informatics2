@@ -24,11 +24,11 @@ def insert_sensor(id):
         c.execute("INSERT INTO sensor VALUES (:id)", {'id': id})
 
 
-def insert_measurement(sensor_id, value):
+def insert_measurement(sensor_id, value, timestamp):
     with _get_connection() as conn:
         c = conn.cursor()
         c.execute("INSERT INTO measurement VALUES (:id ,:sensor_id, :value, :time)",
-                  {'id': None, 'sensor_id': sensor_id, 'value': value, 'time': datetime.datetime.now()})
+                  {'id': None, 'sensor_id': sensor_id, 'value': value, 'time': timestamp})
 
 
 def sensor_exists(sensor_id):

@@ -1,15 +1,18 @@
+from datetime import datetime
+
 import paho.mqtt.client as mqtt
 import db
+import json
 
 GROUP_ID = 420
 BROKER_IP = "34.255.214.243"
 
 
-def save_in_db(sensor_id, measurement):
+def save_in_db(sensor_id, measurement, timestamp):
     print(f"sensor_id: {sensor_id} measurement: {str(measurement)}")
     if not db.sensor_exists(sensor_id):
         db.insert_sensor(sensor_id)
-    db.insert_measurement(sensor_id, measurement)
+    db.insert_measurement(sensor_id, measurement, timestamp)
 
 
 #Mqtt on message
@@ -19,8 +22,14 @@ def on_message(client, userdata, msg):
     payload = msg.payload.decode('utf-8')
 
     try:
-        measurement = float(payload)
-        save_in_db(sensor_id, measurement)
+        msg = json.loads(payload)
+        measurement = float(msg['measurement'])
+        timestamp = msg['timestamp']
+
+        format_string = "%Y-%m-%d %H:%M:%S"
+        time = datetime.strptime(timestamp, format_string)
+        print(f"{timestamp} {measurement}")
+        save_in_db(sensor_id, measurement, time)
     except ValueError:
         print(f"Error: Invalid payload {payload} - expecting float")
 
