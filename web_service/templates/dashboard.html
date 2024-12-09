@@ -109,7 +109,7 @@
         // Initialize 10 charts (one for each sensor)
         function createSensorGraphs() {
             const graphContainer = document.getElementById('sensorGraphs');
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < 10; i++) { // todo change iteration to number of sensors
                 const canvas = document.createElement('canvas');
                 canvas.id = `sensorChart${i}`;
                 canvas.className = 'sensor-graph';
@@ -174,7 +174,7 @@
 
         // Fetch real-time data automatically
         function fetchRealTimeData() {
-            $.get("http://127.0.0.1:5000/robots/{{nID}}/latest", function (data) {
+            $.get("http://127.0.0.1:5000/robots/2/latest", function (data) {
                 const parsedData = JSON.parse(data);
                 updateSensorGraphs(parsedData);
                 updateSensorData(parsedData);
@@ -183,7 +183,7 @@
 
         // Fetch real-time data manually (Get Remote Data button)
         function getRemoteData() {
-            $.get("http://127.0.0.1:5000/robots/{{nID}}/latest", function (data) {
+            $.get("http://127.0.0.1:5000/robots/2/latest", function (data) {
                 const parsedData = JSON.parse(data);
                 console.log("Remote data fetched successfully:", parsedData);
                 updateSensorGraphs(parsedData);
@@ -194,7 +194,7 @@
         // Initialize everything on page load
         $(document).ready(function () {
             createSensorGraphs();
-            setInterval(fetchRealTimeData, 1000); // Automatically fetch data every second
+            setInterval(fetchRealTimeData, 10000); // Automatically fetch data every second
         });
     </script>
 </body>

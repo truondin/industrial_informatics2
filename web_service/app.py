@@ -70,13 +70,16 @@ def static_page(page_name):
 @app.route('/robots/<rID>/latest', methods=['GET'])
 def getRobotLatestState(rID):
     possibleStates = ["ACTIVE", "IDLE", "DOWN"]
-    currentState = random.choice(possibleStates)
 
     now = datetime.now()
 
-
     current_time = now.strftime("%H:%M:%S")
-    return json.dumps({"currentState": currentState, "lastTimeConnected": current_time})
+    robot_data = []
+    for i in range(10):
+        currentState = random.choice(possibleStates)
+        value = random.randint(0, 100)
+        robot_data.append({"currentState": currentState, "lastTimeConnected": current_time, "value": value})
+    return json.dumps(robot_data)
 
 
 
@@ -87,3 +90,4 @@ if __name__ == '__main__':
         app.run()
     finally:
         print("Stopping web service")
+        quit()
