@@ -200,17 +200,29 @@
             }
 
             // API request for KPI data
-            const url = `http://127.0.0.1:5000/robots/{{nID}}/kpi?state=${state}&start=${startDate}&end=${endDate}`;
-            $.get(url, function (data) {
-                try {
-                    const parsedData = JSON.parse(data);
-                    updateKPIChart(parsedData);
-                    updateAlarmsTable(parsedData.alarms);
-                } catch (err) {
-                    console.error("Error parsing data:", err);
+            const url = `http://127.0.0.1:5000/robots/{{nID}}/`;
+            const requestBody = {
+                from: x, // Replace x with the actual value
+                to: y    // Replace y with the actual value
+            };
+
+            $.ajax({
+                url: url,
+                method: "POST", // Use POST to send a request body
+                contentType: "application/json", // Specify the content type as JSON
+                data: JSON.stringify(requestBody), // Convert the body to a JSON string
+                success: function (data) {
+                    try {
+                        const parsedData = JSON.parse(data);
+                        updateKPIChart(parsedData);
+                        updateAlarmsTable(parsedData.alarms);
+                    } catch (err) {
+                        console.error("Error parsing data:", err);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error("Failed to fetch KPI data:", textStatus, errorThrown);
                 }
-            }).fail(function () {
-                console.error("Failed to fetch KPI data.");
             });
         }
 
@@ -243,7 +255,7 @@
 
         // Initialize the pie chart on page load
         $(document).ready(function () {
-            createKpiPieChart();
+            createKpiPieCxhart();
         });
     </script>
 </body>

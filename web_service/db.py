@@ -75,33 +75,80 @@ def get_all_sensors():
 
 
 def get_measurements_in_time_range(start_time, end_time):
+    start_time = datetime.datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
+    end_time = datetime.datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")
     with _get_connection() as conn:
         c = conn.cursor()
         query = """
         SELECT * FROM measurement
-        WHERE time BETWEEN :start_time AND :end_time
+        WHERE time BETWEEN :start_time AND :end_time       
+        ORDER BY time DESC
         """
         c.execute(query, {'start_time': start_time, 'end_time': end_time})
         return c.fetchall()
 
 
 def get_measurements_until(date):
+    date = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
     with _get_connection() as conn:
         c = conn.cursor()
         query = """
         SELECT * FROM measurement
-        WHERE time <= :date
+        WHERE time <= :date       
+        ORDER BY time DESC
         """
         c.execute(query, {'date': date})
         return c.fetchall()
 
 
 def get_measurements_from(date):
+    date = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
     with _get_connection() as conn:
         c = conn.cursor()
         query = """
         SELECT * FROM measurement
-        WHERE time >= :date
+        WHERE time >= :date       
+        ORDER BY time DESC
         """
         c.execute(query, {'date': date})
+        return c.fetchall()
+
+
+def get_measurements_of_sensor_in_time_range(sensor_id, start_time, end_time):
+    start_time = datetime.datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
+    end_time = datetime.datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")
+    with _get_connection() as conn:
+        c = conn.cursor()
+        query = """
+        SELECT * FROM measurement
+        WHERE sensor_id=:sensor_id AND time BETWEEN :start_time AND :end_time
+        ORDER BY time DESC
+        """
+        c.execute(query, {'sensor_id': sensor_id, 'start_time': start_time, 'end_time': end_time})
+        return c.fetchall()
+
+
+def get_measurements_of_sensor_until(sensor_id, date):
+    date = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
+    with _get_connection() as conn:
+        c = conn.cursor()
+        query = """
+        SELECT * FROM measurement
+        WHERE sensor_id=:sensor_id AND time <= :date
+        ORDER BY time DESC
+        """
+        c.execute(query, {'sensor_id': sensor_id, 'date': date})
+        return c.fetchall()
+
+
+def get_measurements_of_sensor_from(sensor_id, date):
+    date = datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
+    with _get_connection() as conn:
+        c = conn.cursor()
+        query = """
+        SELECT * FROM measurement
+        WHERE sensor_id=:sensor_id AND time >= :date       
+        ORDER BY time DESC
+        """
+        c.execute(query, {'sensor_id': sensor_id, 'date': date})
         return c.fetchall()

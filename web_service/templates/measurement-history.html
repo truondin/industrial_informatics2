@@ -153,34 +153,70 @@
             });
         }
 
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+
         // Fetch historical data based on selected sensor and date range
         function fetchHistoricalData() {
             const sensorId = document.getElementById('sensorSelect').value;
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
-
-            if (!startDate || !endDate) {
-                alert('Please select both start and end dates.');
+            let startDate = document.getElementById('startDate').value;
+            let endDate = document.getElementById('endDate').value;
+            if (startDate.length === 0){
+                startDate = null
+            } else {
+                startDate = formatDate(startDate)
+            }
+            if (endDate.length === 0){
+                endDate = null
+            }else{
+                endDate = formatDate(endDate)
+            }
+            console.log(sensorId)
+            console.log(startDate)
+            console.log(endDate)
+            if (startDate === null && endDate === null) {
+                alert('Please select some dates.');
                 return;
             }
 
             // Fetch data from the backend API
-            const url = `http://127.0.0.1:5000/robots/{{nID}}/history?sensor=${sensorId}&start=${startDate}&end=${endDate}`;
-            $.get(url, function (data) {
-                try {
-                    const parsedData = JSON.parse(data);
-                    updateHistoricalChart(parsedData);
-                } catch (err) {
-                    console.error("Error parsing data:", err);
+            const url = `http://127.0.0.1:5000/sensors/${sensorId}/measurements/byTime`;
+            const requestBody = {
+                from: startDate, // Replace x with the actual value
+                to: endDate    // Replace y with the actual value
+            };
+
+            $.ajax({
+                url: url,
+                method: "POST",
+                contentType: "application/json", // Specify the content type as JSON
+                data: JSON.stringify(requestBody), // Convert the body to a JSON string
+                success: function (data) {
+                    try {
+                        console.log(data)
+                        // const parsedData = JSON.parse(data);
+                        updateHistoricalChart(data);
+                    } catch (err) {
+                        console.error("Error parsing data:", err);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error("Failed to fetch historical data:", textStatus, errorThrown);
                 }
-            }).fail(function () {
-                console.error("Failed to fetch historical data.");
             });
         }
 
         // Update the historical chart with new data
         function updateHistoricalChart(data) {
-            const labels = data.map(entry => new Date(entry.timestamp).toLocaleString());
+            const labels = data.map(entry => new Date(entry.time).toLocaleString());
             const values = data.map(entry => entry.value);
 
             historicalChart.data.labels = labels;

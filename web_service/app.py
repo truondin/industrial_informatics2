@@ -39,12 +39,30 @@ def get_measurements_by_time():
     from_date = request_data['from']
     to_date = request_data['to']
     if from_date is None:
-        db.get_measurements_until(to_date)
+        return db.get_measurements_until(to_date)
     elif to_date is None:
-        db.get_measurements_from(from_date)
+        return db.get_measurements_from(from_date)
     else:
         return db.get_measurements_in_time_range(from_date, to_date)
 
+
+@app.route('/sensors/<sensor_id>/measurements/byTime', methods=['POST'])
+def get_measurements_by_time_and_sensor_id(sensor_id):
+    request_data = request.get_json()
+    try:
+        sensor_id = int(sensor_id)
+        from_date = request_data['from']
+        to_date = request_data['to']
+        print(f"{sensor_id} {from_date} {to_date}")
+
+        if from_date is None:
+            return db.get_measurements_of_sensor_until(sensor_id, to_date)
+        elif to_date is None:
+            return db.get_measurements_of_sensor_from(sensor_id, from_date)
+        else:
+            return db.get_measurements_of_sensor_in_time_range(sensor_id, from_date, to_date)
+    except ValueError:
+        return "Invalid sensor id"
 
 def startThreads():
     print("Start threads attempt")
