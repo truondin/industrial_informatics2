@@ -36,19 +36,27 @@ def set_sensor_state(sensor_id, value, current_time):
     if sensor_id not in sensor_states:
         sensor_states[sensor_id] = {"state": "NORMAL", "timestamp": current_time}
 
-    # Get the thresholds for the sensor
-    thresholds = sensor_alarm_values.get(sensor_id, {"HIGH": 20, "LOW": 5})
-
-    # Update the state based on the value
-    if value >= thresholds["HIGH"]:
-        sensor_states[sensor_id]["state"] = "HIGH"
-        sensor_states[sensor_id]["timestamp"] = current_time
-    elif value <= thresholds["LOW"]:
-        sensor_states[sensor_id]["state"] = "LOW"
-        sensor_states[sensor_id]["timestamp"] = current_time
-    else:
-        sensor_states[sensor_id]["state"] = "NORMAL"
-        sensor_states[sensor_id]["timestamp"] = current_time
+    if sensor_states[sensor_id] == "NORMAL":
+        if value >= sensor_alarm_values[sensor_id]["HIGH"]:
+            sensor_states[sensor_id]["state"] = "HIGH"
+            sensor_states[sensor_id]["timestamp"] = current_time
+        if value <= sensor_alarm_values[sensor_id]["LOW"]:
+            sensor_states[sensor_id]["state"] = "LOW"
+            sensor_states[sensor_id]["timestamp"] = current_time
+    elif sensor_states[sensor_id] == "HIGH":
+        if value <= sensor_alarm_values[sensor_id]["LOW"]:
+            sensor_states[sensor_id]["state"] = "LOW"
+            sensor_states[sensor_id]["timestamp"] = current_time
+        if sensor_alarm_values[sensor_id]["HIGH"] > value > sensor_alarm_values[sensor_id]["LOW"]:
+            sensor_states[sensor_id]["state"] = "NORMAL"
+            sensor_states[sensor_id]["timestamp"] = current_time
+    elif sensor_states[sensor_id] == "LOW":
+        if value >= sensor_alarm_values[sensor_id]["HIGH"]:
+            sensor_states[sensor_id]["state"] = "HIGH"
+            sensor_states[sensor_id]["timestamp"] = current_time
+        if sensor_alarm_values[sensor_id]["HIGH"] > value > sensor_alarm_values[sensor_id]["LOW"]:
+            sensor_states[sensor_id]["state"] = "NORMAL"
+            sensor_states[sensor_id]["timestamp"] = current_time
 
 def check_alarms(sensor_id, value, current_time):
     """ Check if an alarm condition is met based on the sensor's state and duration """
