@@ -6,6 +6,13 @@ VAR
 	fb_Measurement1: FB_Measurement;
 	fb_Measurement2: FB_Measurement;
 	fb_Measurement3: FB_Measurement;
+	fb_Measurement4: FB_Measurement;
+	fb_Measurement5: FB_Measurement;
+	fb_Measurement6: FB_Measurement;
+	fb_Measurement7: FB_Measurement;
+	fb_Measurement8: FB_Measurement;
+	fb_Measurement9: FB_Measurement;
+	fb_Measurement10: FB_Measurement;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -19,8 +26,7 @@ END_VAR
 	delayTimeAfterAddOrSub :=T#100MS,
 	nStepValueMult :=1,
 	// Measurement value
-	nMeasValue=>GVL.nMeasurement1,
-	nMeasValueTimestamp => GVL.nMeasurement1_TimeStamp);
+	nMeasValue=>GVL.nMeasurement1);
 	
 fb_Measurement2(
 	nHighLevel:=30, 
@@ -30,8 +36,7 @@ fb_Measurement2(
 	nRandomizerSeedValue := 7, 
 	delayTimeAfterAddOrSub :=T#100MS,
 	nStepValueMult :=0.1,
-	nMeasValue=>GVL.nMeasurement2,
-	nMeasValueTimestamp => GVL.nMeasurement2_TimeStamp);
+	nMeasValue=>GVL.nMeasurement2);
 	
 fb_Measurement3(
 	nHighLevel:=-1, 
@@ -41,8 +46,77 @@ fb_Measurement3(
 	nRandomizerSeedValue := 42, 
 	delayTimeAfterAddOrSub :=T#100MS,
 	nStepValueMult :=0.01,
-	nMeasValue=>GVL.nMeasurement3,
-	nMeasValueTimestamp => GVL.nMeasurement3_TimeStamp);]]></ST>
+	nMeasValue=>GVL.nMeasurement3);
+
+fb_Measurement4(
+    nHighLevel:=10, 
+    nLowLevel:=-10, 
+    nHighDuration:=T#5S, 
+    nLowDuration:=T#5S, 
+    nRandomizerSeedValue:=5, 
+    delayTimeAfterAddOrSub:=T#100MS, 
+    nStepValueMult:=0.2, 
+    nMeasValue=>GVL.nMeasurement4);
+
+fb_Measurement5(
+    nHighLevel:=15, 
+    nLowLevel:=-5, 
+    nHighDuration:=T#5S, 
+    nLowDuration:=T#5S, 
+    nRandomizerSeedValue:=25, 
+    delayTimeAfterAddOrSub:=T#100MS, 
+    nStepValueMult:=0.15, 
+    nMeasValue=>GVL.nMeasurement5);
+
+fb_Measurement6(
+    nHighLevel:=5, 
+    nLowLevel:=-10, 
+    nHighDuration:=T#5S, 
+    nLowDuration:=T#5S, 
+    nRandomizerSeedValue:=30, 
+    delayTimeAfterAddOrSub:=T#100MS, 
+    nStepValueMult:=0.05, 
+    nMeasValue=>GVL.nMeasurement6);
+
+fb_Measurement7(
+    nHighLevel:=20, 
+    nLowLevel:=10, 
+    nHighDuration:=T#5S, 
+    nLowDuration:=T#5S, 
+    nRandomizerSeedValue:=35, 
+    delayTimeAfterAddOrSub:=T#100MS, 
+    nStepValueMult:=0.25, 
+    nMeasValue=>GVL.nMeasurement7);
+
+fb_Measurement8(
+    nHighLevel:=25, 
+    nLowLevel:=-15, 
+    nHighDuration:=T#5S, 
+    nLowDuration:=T#5S, 
+    nRandomizerSeedValue:=45, 
+    delayTimeAfterAddOrSub:=T#100MS, 
+    nStepValueMult:=0.1, 
+    nMeasValue=>GVL.nMeasurement8);
+
+fb_Measurement9(
+    nHighLevel:=-5, 
+    nLowLevel:=-20, 
+    nHighDuration:=T#5S, 
+    nLowDuration:=T#5S, 
+    nRandomizerSeedValue:=50, 
+    delayTimeAfterAddOrSub:=T#100MS, 
+    nStepValueMult:=0.02, 
+    nMeasValue=>GVL.nMeasurement9);
+
+fb_Measurement10(
+    nHighLevel:=12, 
+    nLowLevel:=-8, 
+    nHighDuration:=T#5S, 
+    nLowDuration:=T#5S, 
+    nRandomizerSeedValue:=60, 
+    delayTimeAfterAddOrSub:=T#100MS, 
+    nStepValueMult:=0.12, 
+    nMeasValue=>GVL.nMeasurement10);]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
       <LineId Id="21" Count="0" />
@@ -53,16 +127,16 @@ fb_Measurement3(
       <LineId Id="82" Count="0" />
       <LineId Id="73" Count="0" />
       <LineId Id="13" Count="0" />
-      <LineId Id="89" Count="0" />
       <LineId Id="43" Count="0" />
       <LineId Id="45" Count="6" />
       <LineId Id="83" Count="0" />
       <LineId Id="44" Count="0" />
-      <LineId Id="90" Count="0" />
       <LineId Id="56" Count="7" />
       <LineId Id="84" Count="0" />
       <LineId Id="54" Count="0" />
-      <LineId Id="91" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="177" Count="67" />
+      <LineId Id="166" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

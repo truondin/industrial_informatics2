@@ -25,7 +25,6 @@ VAR
 	StayLowLevel  : BOOL;
 	is_measValueGoingUp : BOOL;
 	randNum : LREAL;
-    prevMeasValue: LREAL := 0.0;        // Previous measurement value
 
 END_VAR
 ]]></Declaration>
@@ -77,25 +76,6 @@ ELSIF nMeasValue < nLowLevel AND NOT is_measValueGoingUp THEN
 	END_IF
 END_IF
 
-// Call the FB_LocalSystemTime function block
-GVL.fbSystemTime(
-	sNetID:= , 
-	bEnable:= TRUE, 
-	dwCycle:= 1, 
-	dwOpt:= , 
-	tTimeout:= , 
-	bValid=> , 
-	systemTime=> , 
-	tzID=> );
-	
-	GVL.dtSystemTime := SYSTEMTIME_TO_STRING(GVL.fbSystemTime.systemTime);
-
-// Check if the measurement value has changed
-IF nMeasValue <> prevMeasValue THEN
-    nMeasValueTimestamp := GVL.dtSystemTime; // Update the timestamp
-    prevMeasValue := nMeasValue;        // Update the previous value
-END_IF
-
 // calling timers
 TON_HighDuration();
 TON_LowDuration();
@@ -105,13 +85,7 @@ TON_delayBetweenAddOrSub();]]></ST>
       <LineId Id="810" Count="10" />
       <LineId Id="822" Count="16" />
       <LineId Id="840" Count="17" />
-      <LineId Id="878" Count="0" />
-      <LineId Id="956" Count="0" />
-      <LineId Id="976" Count="7" />
-      <LineId Id="968" Count="0" />
-      <LineId Id="984" Count="1" />
-      <LineId Id="961" Count="4" />
-      <LineId Id="858" Count="4" />
+      <LineId Id="859" Count="3" />
       <LineId Id="131" Count="0" />
     </LineIds>
   </POU>
