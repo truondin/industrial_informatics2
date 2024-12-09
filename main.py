@@ -1,4 +1,7 @@
 import sys
+import json
+from datetime import datetime
+
 import paho.mqtt.client as mqtt
 
 from opcua import Client
@@ -38,9 +41,12 @@ class EventHandler(object):
     def datachange_notification(self, node, val, data):
         print(node, round(val, AMOUNT_OF_DIGITS))
 
-        value = round(val, AMOUNT_OF_DIGITS)
+        measurement = round(val, AMOUNT_OF_DIGITS)
+        format_string = "%Y-%m-%d %H:%M:%S"
+        timestamp = datetime.datetime.now()
+        value = {'value': measurement, 'timestamp': timestamp.strftime(format_string)}
 
-        self.client.publish("ii24/" + str(GROUP_ID) + "/sensor/" + str(self.sensor_id), value)
+        self.client.publish("ii24/" + str(GROUP_ID) + "/sensor/" + str(self.sensor_id), json.dumps(value))
 
 
 if __name__ == '__main__':
