@@ -69,11 +69,11 @@
             clear: both;
         }
     </style>
-    <title>Dashboard for Sensor: {{nID}}</title>
+    <title>Dashboard for Sensor</title>
 </head>
 <body>
     <div class="header">
-        <h1>Dashboard for Sensor: {{nID}}</h1>
+        <h1>Dashboard for Sensor</h1>
     </div>
     <div class="topnav">
         <a href="/dashboard?nID={{nID}}">Dashboard</a>
@@ -99,17 +99,18 @@
                 </div>
             </div>
             <div class="card">
-                <button type="button" onclick="getRemoteData()">Get Remote Data</button>
+                <button type="button" onclick="fetchRealTimeData()">Refresh</button>
             </div>
         </div>
     </div>
     <script>
         let charts = []; // Array to store chart instances
+        let latestData = []
 
         // Initialize 10 charts (one for each sensor)
         function createSensorGraphs() {
             const graphContainer = document.getElementById('sensorGraphs');
-            for (let i = 0; i < 10; i++) { // todo change iteration to number of sensors
+            for (let i = 0; i < 10; i++) {
                 const canvas = document.createElement('canvas');
                 canvas.id = `sensorChart${i}`;
                 canvas.className = 'sensor-graph';
@@ -137,64 +138,70 @@
                 });
 
                 charts.push(chart); // Store chart instance for updates
+                latestData.push(0);
             }
         }
 
         // Update each chart with new data
-        function updateSensorGraphs(data) {
-            const now = new Date().toLocaleTimeString();
+        function updateSensorGraphs(data, i) {
+            const chart = charts[i];
 
-            data.forEach((sensor, index) => {
-                const chart = charts[index];
-                chart.data.labels.push(now);
-                if (chart.data.labels.length > 20) {
-                    chart.data.labels.shift(); // Remove the oldest label
-                }
+            let new_labels = []
+            let new_data = []
+            data.forEach((measurement, index) => {
+                new_labels.push(measurement.time)
+                new_data.push(measurement.value)
 
-                chart.data.datasets[0].data.push(sensor.value);
-                if (chart.data.datasets[0].data.length > 20) {
-                    chart.data.datasets[0].data.shift(); // Remove the oldest data point
-                }
-
-                chart.update(); // Refresh the chart
             });
+
+            chart.data.labels = new_labels
+            chart.data.datasets[0].data = new_data
+            chart.update(); // Refresh the chart
         }
 
         // Update the right column with sensor data
-        function updateSensorData(data) {
+        function updateSensorData() {
             const container = document.getElementById('sensorDataContainer');
             container.innerHTML = ''; // Clear previous data
-            data.forEach((sensor, index) => {
+            for (let i = 0; i < 10; i++){
+                const sensor_value = latestData[i]
                 const sensorDiv = document.createElement('div');
                 sensorDiv.classList.add('sensor-data');
-                sensorDiv.innerHTML = `<h3>Sensor ${index + 1}: ${sensor.value}</h3>`;
+                sensorDiv.innerHTML = `<h3>Sensor ${i + 1}: ${sensor_value}</h3>`;
                 container.appendChild(sensorDiv);
-            });
+            }
         }
 
         // Fetch real-time data automatically
         function fetchRealTimeData() {
-            $.get("http://127.0.0.1:5000/robots/2/latest", function (data) {
-                const parsedData = JSON.parse(data);
-                updateSensorGraphs(parsedData);
-                updateSensorData(parsedData);
-            });
+            for (let i = 0; i < 10; i++) {
+                getRemoteData(i)
+            }
+        }
+
+         function updateLatestData(sensor, i) {
+            console.log("Update latest data "+ i + " " + sensor)
+            latestData[i] = sensor.value
         }
 
         // Fetch real-time data manually (Get Remote Data button)
-        function getRemoteData() {
-            $.get("http://127.0.0.1:5000/robots/2/latest", function (data) {
-                const parsedData = JSON.parse(data);
-                console.log("Remote data fetched successfully:", parsedData);
-                updateSensorGraphs(parsedData);
-                updateSensorData(parsedData);
+        function getRemoteData(i) {
+            $.get("http://127.0.0.1:5000/sensors/" + (i + 1) + "/measurements", function (data) {
+                console.log("Remote data of "+(i + 1)+" fetched successfully:", data);
+                data = data.slice(0, 20)
+                data = data.reverse()
+                updateSensorGraphs(data, i);
+                if (data.length > 0){
+                    updateLatestData(data[data.length - 1], i);
+                }
+                updateSensorData();
             });
         }
 
         // Initialize everything on page load
         $(document).ready(function () {
             createSensorGraphs();
-            setInterval(fetchRealTimeData, 10000); // Automatically fetch data every second
+            setInterval(fetchRealTimeData, 1000); // Automatically fetch data every second
         });
     </script>
 </body>

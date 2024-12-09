@@ -64,7 +64,7 @@ def get_all_measurements():
 def get_measurements_by_sensor_id(sensor_id):
     with _get_connection() as conn:
         c = conn.cursor()
-        c.execute("SELECT * FROM measurement WHERE sensor_id=:id", {'id': sensor_id})
+        c.execute("SELECT * FROM measurement WHERE sensor_id=:id ORDER BY measurement.time DESC", {'id': sensor_id})
         return c.fetchall()
 
 def get_all_sensors():
