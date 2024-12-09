@@ -64,6 +64,34 @@ def get_measurements_by_time_and_sensor_id(sensor_id):
     except ValueError:
         return "Invalid sensor id"
 
+@app.route('/alarms/<sensor_id>', methods=['GET'])
+def get_alarms_by_sensor_id(sensor_id):
+    try:
+        sensor_id = int(sensor_id)
+        alarms = db.get_alarms_by_sensor_id(sensor_id)
+        return {"alarms": alarms}
+    except ValueError:
+        return {"error": "Invalid sensor ID"}, 400
+
+@app.route('/alarms/<sensor_id>/byTime', methods=['POST'])
+def get_alarms_by_sensor_and_time(sensor_id):
+    try:
+        sensor_id = int(sensor_id)
+        request_data = request.get_json()
+        from_date = request_data.get('from')
+        to_date = request_data.get('to')
+        alarms = db.get_alarms_in_time_range(sensor_id, from_date, to_date)
+        print(f"{sensor_id} {from_date} {to_date} {alarms}")
+
+        if not from_date or not to_date:
+            return {"error": "Both 'from' and 'to' timestamps are required."}, 400
+        return {"alarms": alarms}
+    except ValueError:
+        return {"error": "Invalid sensor ID"}, 400
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+
 def startThreads():
     print("Start threads attempt")
     global threadStarted

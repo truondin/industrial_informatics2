@@ -38,26 +38,28 @@
         }
         .row {
             display: flex;
-            justify-content: space-between;
             flex-wrap: nowrap;
+            justify-content: space-between;
         }
         .leftcolumn {
             flex: 60%;
-            background-color: white;
-            padding: 20px;
-            border: 1px solid #ddd;
         }
         .rightcolumn {
             flex: 40%;
+            background-color: #f1f1f1;
+            padding: 20px;
+        }
+        .card {
             background-color: white;
             padding: 20px;
+            margin: 10px 0;
             border: 1px solid #ddd;
         }
         canvas {
             display: block;
             margin: auto;
-            width: 80%;
-            height: 300px;
+            width: 100%;
+            height: 400px;
         }
         .form-control {
             margin: 10px 0;
@@ -73,27 +75,12 @@
             padding: 8px;
             margin-top: 5px;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 8px;
-            text-align: left;
-            border: 1px solid #ddd;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        .filter {
-            margin-bottom: 20px;
-        }
     </style>
-    <title>Alarms & KPIs for Sensor: {{nID}}</title>
+    <title>Alarms & KPIs for Sensors</title>
 </head>
 <body>
     <div class="header">
-        <h1>Alarms & KPIs for Sensor: {{nID}}</h1>
+        <h1>Alarms & KPIs for Sensors</h1>
     </div>
     <div class="topnav">
         <a href="/dashboard?nID={{nID}}">Dashboard</a>
@@ -106,39 +93,50 @@
             <div class="card">
                 <h2>KPIs for Filtered Data</h2>
                 <canvas id="kpiPieChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Alarms Table and Filters on the right -->
+        <div class="rightcolumn">
+            <div class="filter">
                 <div class="form-control">
-                    <label for="stateFilter">Filter by State:</label>
-                    <select id="stateFilter">
-                        <option value="all">All</option>
-                        <option value="low">Low</option>
-                        <option value="normal">Normal</option>
-                        <option value="high">High</option>
+                    <label for="sensorFilter">Select Sensor:</label>
+                    <select id="sensorFilter" onchange="fetchKPIData()">
+                        <option value="1">Sensor 1</option>
+                        <option value="2">Sensor 2</option>
+                        <option value="3">Sensor 3</option>
+                        <option value="4">Sensor 4</option>
+                        <option value="5">Sensor 5</option>
+                        <option value="6">Sensor 6</option>
+                        <option value="7">Sensor 7</option>
+                        <option value="8">Sensor 8</option>
+                        <option value="9">Sensor 9</option>
+                        <option value="10">Sensor 10</option>
                     </select>
                 </div>
                 <div class="form-control">
                     <label for="startDate">From:</label>
-                    <input type="datetime-local" id="startDate">
+                    <input type="datetime-local" id="startDate" onchange="fetchKPIData()">
                 </div>
                 <div class="form-control">
                     <label for="endDate">To:</label>
-                    <input type="datetime-local" id="endDate">
+                    <input type="datetime-local" id="endDate" onchange="fetchKPIData()">
                 </div>
-                <button type="button" onclick="fetchKPIData()">Show KPIs</button>
-            </div>
-        </div>
-
-        <!-- Alarms Table on the right -->
-        <div class="rightcolumn">
-            <div class="card">
-                <h2>Alarms & Events</h2>
-                <div class="filter">
+                <div class="form-control">
                     <label for="priorityFilter">Filter by Priority:</label>
-                    <select id="priorityFilter">
+                    <select id="priorityFilter" onchange="fetchKPIData()">
+                        <option value="all">All</option>
                         <option value="high">High</option>
                         <option value="medium">Medium</option>
                         <option value="low">Low</option>
                     </select>
                 </div>
+                <button type="button" onclick="fetchKPIData()">Show Data</button>
+            </div>
+
+            <!-- Alarms Table -->
+            <div class="card">
+                <h2>Alarms & Events</h2>
                 <table id="alarmsTable">
                     <thead>
                         <tr>
@@ -188,22 +186,37 @@
             });
         }
 
-        // Fetch filtered KPI data for pie chart
+        // Fetch filtered KPI data for pie chart and alarms table for selected sensor
         function fetchKPIData() {
-            const state = document.getElementById('stateFilter').value;
+            const sensor = document.getElementById('sensorFilter').value;  // Get selected sensor
+            const priority = document.getElementById('priorityFilter').value;
             const startDate = document.getElementById('startDate').value;
             const endDate = document.getElementById('endDate').value;
 
-            if (!startDate || !endDate) {
-                alert('Please select both start and end dates.');
+            if (startDate.length === 0){
+                startDate = null
+            } else {
+                startDate = formatDate(startDate)
+            }
+            if (endDate.length === 0){
+                endDate = null
+            }else{
+                endDate = formatDate(endDate)
+            }
+            console.log(sensorId)
+            console.log(startDate)
+            console.log(endDate)
+            if (startDate === null && endDate === null) {
+                alert('Please select some dates.');
                 return;
             }
 
-            // API request for KPI data
-            const url = `http://127.0.0.1:5000/robots/{{nID}}/`;
+            // API request for KPI and alarm data for the selected sensor
+            const url = `http://127.0.0.1:5000/alarms/${sensor}/byTime`;
             const requestBody = {
-                from: x, // Replace x with the actual value
-                to: y    // Replace y with the actual value
+                from: startDate, // Replace x with the actual value
+                to: endDate,    // Replace y with the actual value
+                priority: priority
             };
 
             $.ajax({
@@ -213,22 +226,23 @@
                 data: JSON.stringify(requestBody), // Convert the body to a JSON string
                 success: function (data) {
                     try {
-                        const parsedData = JSON.parse(data);
-                        updateKPIChart(parsedData);
-                        updateAlarmsTable(parsedData.alarms);
+                        console.log(data)
+                        // const parsedData = JSON.parse(data);
+                        updateKPIChart(data.kpis);
+                        updateAlarmsTable(data.alarms);
                     } catch (err) {
                         console.error("Error parsing data:", err);
                     }
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    console.error("Failed to fetch KPI data:", textStatus, errorThrown);
+                    console.error("Failed to fetch KPI and alarm data:", textStatus, errorThrown);
                 }
             });
         }
 
         // Update the KPI Pie Chart with data
         function updateKPIChart(data) {
-            const total = data.low + data.normal + data.high;
+            const total = data.Low + data.Normal + data.high;
             const lowPercentage = (data.low / total) * 100 || 0;
             const normalPercentage = (data.normal / total) * 100 || 0;
             const highPercentage = (data.high / total) * 100 || 0;
@@ -253,9 +267,9 @@
             });
         }
 
-        // Initialize the pie chart on page load
+        // Initialize the pie chart and fetch sensor data on page load
         $(document).ready(function () {
-            createKpiPieCxhart();
+            createKpiPieChart();
         });
     </script>
 </body>

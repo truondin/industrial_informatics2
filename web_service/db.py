@@ -30,6 +30,15 @@ def insert_measurement(sensor_id, value, timestamp):
         c.execute("INSERT INTO measurement VALUES (:id ,:sensor_id, :value, :time)",
                   {'id': None, 'sensor_id': sensor_id, 'value': value, 'time': timestamp})
 
+def insert_alarm(sensor_id, state, alarm_level, timestamp, message):
+    with _get_connection() as conn:
+        c = conn.cursor()
+        c.execute("""
+        INSERT INTO alarms (sensor_id, state, alarm_level, timestamp, message)
+        VALUES (:sensor_id, :state, :alarm_level, :timestamp, :message)
+        """, {'sensor_id': sensor_id, 'state': state, 'alarm_level': alarm_level, 'timestamp': timestamp, 'message': message})
+
+
 
 def sensor_exists(sensor_id):
     with _get_connection() as conn:
@@ -52,7 +61,16 @@ def create_db():
                      value FLOAT,
                      time TIMESTAMP
                      );""")
-
+        # Create alarms table
+        c.execute("""CREATE TABLE IF NOT EXISTS alarms (
+                     id INTEGER PRIMARY KEY AUTOINCREMENT,
+                     sensor_id INTEGER,
+                     state TEXT,
+                     alarm_level TEXT,
+                     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                     message TEXT,
+                     FOREIGN KEY(sensor_id) REFERENCES sensor(id)
+                     );""")
 
 def get_all_measurements():
     with _get_connection() as conn:
@@ -152,3 +170,27 @@ def get_measurements_of_sensor_from(sensor_id, date):
         """
         c.execute(query, {'sensor_id': sensor_id, 'date': date})
         return c.fetchall()
+
+def get_alarms_by_sensor_id(sensor_id):
+    with _get_connection() as conn:
+        c = conn.cursor()
+        c.execute("""
+        SELECT * FROM alarms
+        WHERE sensor_id=:sensor_id
+        ORDER BY timestamp DESC
+        """, {'sensor_id': sensor_id})
+        return c.fetchall()
+
+def get_alarms_in_time_range(sensor_id, from_date, to_date):
+    from_date = datetime.datetime.strptime(from_date, "%Y-%m-%d %H:%M:%S")
+    to_date = datetime.datetime.strptime(to_date, "%Y-%m-%d %H:%M:%S")
+    with _get_connection() as conn:
+        c = conn.cursor()
+        query = """
+        SELECT * FROM alarms
+        WHERE sensor_id=:sensor_id AND timestamp BETWEEN :from_date AND :to_date
+        ORDER BY timestamp DESC
+        """
+        c.execute(query, {'sensor_id': sensor_id, 'from_date': from_date, 'to_date': to_date})
+        return c.fetchall()
+
