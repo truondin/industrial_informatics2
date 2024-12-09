@@ -23,12 +23,13 @@ def on_message(client, userdata, msg):
 
     try:
         msg = json.loads(payload)
-        measurement = float(msg['measurement'])
+        print(msg)
+        measurement = msg['value']
         timestamp = msg['timestamp']
 
         format_string = "%Y-%m-%d %H:%M:%S"
         time = datetime.strptime(timestamp, format_string)
-        print(f"{timestamp} {measurement}")
+        print(f"{time} {measurement}")
         save_in_db(sensor_id, measurement, time)
     except ValueError:
         print(f"Error: Invalid payload {payload} - expecting float")

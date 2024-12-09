@@ -43,7 +43,7 @@ class EventHandler(object):
 
         measurement = round(val, AMOUNT_OF_DIGITS)
         format_string = "%Y-%m-%d %H:%M:%S"
-        timestamp = datetime.datetime.now()
+        timestamp = datetime.now()
         value = {'value': measurement, 'timestamp': timestamp.strftime(format_string)}
 
         self.client.publish("ii24/" + str(GROUP_ID) + "/sensor/" + str(self.sensor_id), json.dumps(value))
