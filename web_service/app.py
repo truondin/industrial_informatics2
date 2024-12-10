@@ -8,7 +8,7 @@ import mqtt as mqtt_handler
 import db
 import json
 
-from web_service.objects import State
+from web_service.objects import State, Measurement
 
 app = Flask(__name__)
 threadStarted=False
@@ -83,6 +83,48 @@ def get_kpi_of_sensor(sensor_id):
         high_percentage = (high / total) * 100 if total else 0
 
         return {"low": low_percentage, "normal": normal_percentage, "high": high_percentage}
+
+    except ValueError:
+        return "Invalid sensor id"
+
+
+
+@app.route('/sensors/<sensor_id>/failuresMeanTime', methods=['POST'])
+def get_mean_time_between_failures_of_sensor(sensor_id):
+    request_data = request.get_json()
+    try:
+        sensor_id = int(sensor_id)
+        from_date = request_data['from']
+        to_date = request_data['to']
+
+        data = db.get_measurements_of_sensor_in_time_range(sensor_id, from_date, to_date)
+        measurements = []
+        for d in data:
+            measurements.append(Measurement(d['sensor_id'], d['value'], datetime.strptime(d['time'], "%Y-%m-%d %H:%M:%S"), State(d['state'])))
+
+        result = 0
+        prev = measurements[0]
+        checkpoint = None
+        find_high = True
+        if prev.state == State.HIGH:
+            find_high = False
+        for i in range(1, len(measurements)):
+            curr = measurements[i]
+            if find_high:
+                if curr.state == State.HIGH and prev.state != State.HIGH:
+                    find_high = False
+                    if checkpoint is not None:
+                        delta = checkpoint - curr.time
+                        result += delta.total_seconds()
+                        checkpoint = None
+            else:
+                if curr.state != State.HIGH and prev.state == State.HIGH:
+                    find_high = True
+                    if checkpoint is None:
+                        checkpoint = prev.time
+
+            prev = curr
+        return {'failuresMeanTime': result}
 
     except ValueError:
         return "Invalid sensor id"

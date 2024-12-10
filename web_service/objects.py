@@ -6,7 +6,6 @@ class State(Enum):
     NORMAL = 1
     HIGH = 2
 
-
 class Sensor:
     def __init__(self, sensor_id, low_threshold, high_threshold):
         self.sensor_id = sensor_id
@@ -20,3 +19,5 @@ class Measurement:
         self.value = value
         self.time = time
         self.state = state
+    def __str__(self):
+        return f'{self.sensor_id} {self.value} {self.time} {self.state}'
