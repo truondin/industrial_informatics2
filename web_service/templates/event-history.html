@@ -140,9 +140,9 @@
                 <table id="alarmsTable">
                     <thead>
                         <tr>
+                            <th>Sensor ID</th>
+                            <th>Alarm State</th>
                             <th>Timestamp</th>
-                            <th>Priority</th>
-                            <th>Message</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -204,26 +204,26 @@
             let startDate = document.getElementById('startDate').value;
             let endDate = document.getElementById('endDate').value;
 
-            if (startDate.length === 0){
-                startDate = null
+            if (startDate.length === 0) {
+                startDate = null;
             } else {
-                startDate = formatDate(startDate)
+                startDate = formatDate(startDate);
             }
-            if (endDate.length === 0){
-                endDate = null
-            }else{
-                endDate = formatDate(endDate)
+            if (endDate.length === 0) {
+                endDate = null;
+            } else {
+                endDate = formatDate(endDate);
             }
-            console.log(sensor)
-            console.log(startDate)
-            console.log(endDate)
+            console.log(sensor);
+            console.log(startDate);
+            console.log(endDate);
             if (startDate === null && endDate === null) {
                 alert('Please select some dates.');
                 return;
             }
 
-            // API request for KPI and alarm data for the selected sensor
-            const url = `http://127.0.0.1:5000/sensors/${sensor}/kpi`;
+            // Fetch KPI data from the API for the selected sensor
+            const kpiUrl = `http://127.0.0.1:5000/sensors/${sensor}/kpi`;
             const requestBody = {
                 from: startDate, // Replace x with the actual value
                 to: endDate,    // Replace y with the actual value
@@ -231,22 +231,42 @@
             };
 
             $.ajax({
-                url: url,
+                url: kpiUrl,
                 method: "POST", // Use POST to send a request body
                 contentType: "application/json", // Specify the content type as JSON
                 data: JSON.stringify(requestBody), // Convert the body to a JSON string
                 success: function (data) {
                     try {
-                        console.log(data)
-                        // const parsedData = JSON.parse(data);
+                        console.log(data);
+                        // Update the KPI Pie Chart with received data
                         updateKPIChart(data);
-                        // updateAlarmsTable(data.alarms);
                     } catch (err) {
                         console.error("Error parsing data:", err);
                     }
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    console.error("Failed to fetch KPI and alarm data:", textStatus, errorThrown);
+                    console.error("Failed to fetch KPI data:", textStatus, errorThrown);
+                }
+            });
+
+            // Fetch alarm data for the selected sensor
+            const alarmUrl = `http://127.0.0.1:5000/alarms/${sensor}/byTime`;
+            $.ajax({
+                url: alarmUrl,
+                method: "POST", // Use POST to send a request body
+                contentType: "application/json", // Specify the content type as JSON
+                data: JSON.stringify(requestBody), // Convert the body to a JSON string
+                success: function (data) {
+                    try {
+                        console.log(data);
+                        // Update the alarms table with the received alarm data
+                        updateAlarmsTable(data.alarms); // Make sure to pass data.alarms as the alarms array
+                    } catch (err) {
+                        console.error("Error parsing alarm data:", err);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error("Failed to fetch alarm data:", textStatus, errorThrown);
                 }
             });
         }
@@ -265,9 +285,9 @@
             alarms.forEach(alarm => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
+                    <td>${alarm.sensor_id}</td>
+                    <td>${alarm.alarm_level}</td>
                     <td>${new Date(alarm.timestamp).toLocaleString()}</td>
-                    <td>${alarm.priority}</td>
-                    <td>${alarm.message}</td>
                 `;
                 tableBody.appendChild(row);
             });
@@ -277,6 +297,7 @@
         $(document).ready(function () {
             createKpiPieChart();
         });
+
     </script>
 </body>
 </html>

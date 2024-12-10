@@ -36,13 +36,13 @@ def insert_measurement(measurement: Measurement):
                    'time': measurement.time,
                    'state': measurement.state.value})
 
-def insert_alarm(sensor_id, state, alarm_level, timestamp, message):
+def insert_alarm(sensor_id, alarm_level, timestamp, message):
     with _get_connection() as conn:
         c = conn.cursor()
         c.execute("""
-        INSERT INTO alarms (sensor_id, state, alarm_level, timestamp, message)
-        VALUES (:sensor_id, :state, :alarm_level, :timestamp, :message)
-        """, {'sensor_id': sensor_id, 'state': state, 'alarm_level': alarm_level, 'timestamp': timestamp, 'message': message})
+        INSERT INTO alarms (sensor_id, alarm_level, timestamp, message)
+        VALUES (:sensor_id, :alarm_level, :timestamp, :message)
+        """, {'sensor_id': sensor_id, 'alarm_level': alarm_level, 'timestamp': timestamp, 'message': message})
 
 
 
@@ -74,7 +74,6 @@ def create_db():
         c.execute("""CREATE TABLE IF NOT EXISTS alarms (
                      id INTEGER PRIMARY KEY AUTOINCREMENT,
                      sensor_id INTEGER,
-                     state TEXT,
                      alarm_level TEXT,
                      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                      message TEXT,
