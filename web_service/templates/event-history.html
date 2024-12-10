@@ -92,6 +92,7 @@
         <div class="leftcolumn">
             <div class="card">
                 <h2>KPIs for Filtered Data</h2>
+                <p id="mtbfDisplay">Mean Time Between Failures: <span id="mtbfValue">No data available</span></p>
                 <canvas id="kpiPieChart"></canvas>
             </div>
         </div>
@@ -101,7 +102,7 @@
             <div class="filter">
                 <div class="form-control">
                     <label for="sensorFilter">Select Sensor:</label>
-                    <select id="sensorFilter" onchange="fetchKPIData()">
+                    <select id="sensorFilter" onchange="fetchData()">
                         <option value="1">Sensor 1</option>
                         <option value="2">Sensor 2</option>
                         <option value="3">Sensor 3</option>
@@ -116,22 +117,22 @@
                 </div>
                 <div class="form-control">
                     <label for="startDate">From:</label>
-                    <input type="datetime-local" id="startDate" onchange="fetchKPIData()">
+                    <input type="datetime-local" id="startDate" onchange="fetchData()">
                 </div>
                 <div class="form-control">
                     <label for="endDate">To:</label>
-                    <input type="datetime-local" id="endDate" onchange="fetchKPIData()">
+                    <input type="datetime-local" id="endDate" onchange="fetchData()">
                 </div>
                 <div class="form-control">
                     <label for="priorityFilter">Filter by Priority:</label>
-                    <select id="priorityFilter" onchange="fetchKPIData()">
+                    <select id="priorityFilter" onchange="fetchData()">
                         <option value="all">All</option>
                         <option value="high">High</option>
                         <option value="medium">Medium</option>
                         <option value="low">Low</option>
                     </select>
                 </div>
-                <button type="button" onclick="fetchKPIData()">Show Data</button>
+                <button type="button" onclick="fetchData()">Show Data</button>
             </div>
 
             <!-- Alarms Table -->
@@ -198,7 +199,7 @@
         }
 
         // Fetch filtered KPI data for pie chart and alarms table for selected sensor
-        function fetchKPIData() {
+        function fetchData() {
             const sensor = document.getElementById('sensorFilter').value;  // Get selected sensor
             const priority = document.getElementById('priorityFilter').value;
             let startDate = document.getElementById('startDate').value;
@@ -269,6 +270,42 @@
                     console.error("Failed to fetch alarm data:", textStatus, errorThrown);
                 }
             });
+
+            // Fetch alarm data for the selected sensor
+            const mtbfUrl = `http://127.0.0.1:5000/sensors/${sensor}/failuresMeanTime`;
+            $.ajax({
+                url: mtbfUrl,
+                method: "POST", // Use POST to send a request body
+                contentType: "application/json", // Specify the content type as JSON
+                data: JSON.stringify(requestBody), // Convert the body to a JSON string
+                success: function (data) {
+                    try {
+                        updateMTBFDisplay(data.failuresMeanTime)
+                    } catch (err) {
+                        console.error("Error parsing alarm data:", err);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error("Failed to fetch alarm data:", textStatus, errorThrown);
+                }
+            });
+        }
+
+        function updateMTBFDisplay(mtbf) {
+            const mtbfValueElement = document.getElementById('mtbfValue');
+
+            if (mtbf === null || isNaN(mtbf)) {
+                mtbfValueElement.textContent = "Not enough data";
+                return;
+            }
+
+            // Convert seconds into hours, minutes, and seconds
+            const hours = Math.floor(mtbf / 3600);
+            const minutes = Math.floor((mtbf % 3600) / 60);
+            const seconds = Math.floor(mtbf % 60);
+
+            // Update the display
+            mtbfValueElement.textContent = `${hours}h ${minutes}m ${seconds}s`;
         }
 
         // Update the KPI Pie Chart with data
