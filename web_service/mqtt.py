@@ -2,6 +2,8 @@ from datetime import datetime
 import paho.mqtt.client as mqtt
 import db
 import json
+import time
+import threading
 
 from web_service.objects import Measurement, State
 
@@ -12,10 +14,14 @@ BROKER_IP = "34.255.214.243"
 THRESHOLD_X = 4  # 4 seconds (in seconds)
 THRESHOLD_Y = 4  # 4 seconds (in seconds)
 
-# Dictionaries to track sensor states and alarm configurations
-sensor_states = {}  # Format: {sensor_id: {"state": "HIGH/LOW/NORMAL", "timestamp": datetime}}
-sensor_alarm_values = {}  # Format: {sensor_id: {"HIGH": high_value, "LOW": low_value}}
-sensor_send_alarm = {}  # Format: {sensor_id: {"send": 0/1, "alarm": "HIGH/LOW", "type": "X/Y"}}
+HIGH_THRESHOLD = 55
+sensor_timers_x = {}  # Format: {sensor_id: start_time}
+sensor_timers_y = {}  # Format: {sensor_id: start_time}
+sensor_last_time = {}  # Format: {sensor_id: last_received_time}
+sensor_flags_x = {}  # Format: {sensor_id: True/False}
+sensor_flags_y = {}  # Format: {sensor_id: True/False}
+sensor_thresholds = [20, 30, -1, 10, 15, 5, 20, 25, -5, 12]
+
 
 
 def get_sensor_state(sensor_id, value):
@@ -41,59 +47,59 @@ def handle_measurement(sensor_id, measurement, timestamp):
 
     db.insert_measurement(measurement)
 
+
 def log_alarm(sensor_id, alarm_type, current_time):
     """ Log the alarm into the database """
     message = f"Sensor {sensor_id} exceeded {alarm_type}-level threshold."
     print(f"Logging alarm: {message}")
     db.insert_alarm(sensor_id, alarm_type, current_time, message)
 
-def set_sensor_state(sensor_id, value, current_time):
-    """ Determine and set the state of the sensor based on its value """
-    global sensor_states
 
-    # Initialize the sensor state if not already done
-    if sensor_id not in sensor_states:
-        sensor_states[sensor_id] = {"state": "NORMAL", "timestamp": current_time}
+def check_high(sensor_id, measurement, current_time):
+    global sensor_thresholds, sensor_timers_x, sensor_timers_y, sensor_flags_x, sensor_flags_y
+    if measurement > sensor_thresholds[sensor_id]:
+        if sensor_id not in sensor_timers_x:
+            sensor_timers_x[sensor_id] = current_time
+            print(f"Threshold exceeded for sensor {sensor_id}. Timer X started.")
+        if sensor_id not in sensor_timers_y:
+            sensor_timers_y[sensor_id] = current_time
+            print(f"Threshold exceeded for sensor {sensor_id}. Timer Y started.")
+    else:
+        # Reset timers and flags if the value drops below the threshold
+        if sensor_id in sensor_timers_x:
+            del sensor_timers_x[sensor_id]
+            print(f"Timer X reset for sensor {sensor_id}.")
+        if sensor_id in sensor_timers_y:
+            del sensor_timers_y[sensor_id]
+            print(f"Timer Y reset for sensor {sensor_id}.")
+        if sensor_id in sensor_flags_x:
+            sensor_flags_x[sensor_id] = False
+        if sensor_id in sensor_flags_y:
+            sensor_flags_y[sensor_id] = False
 
-    if sensor_states[sensor_id] == "NORMAL":
-        if value >= sensor_alarm_values[sensor_id]["HIGH"]:
-            sensor_states[sensor_id]["state"] = "HIGH"
-            sensor_states[sensor_id]["timestamp"] = current_time
-        if value <= sensor_alarm_values[sensor_id]["LOW"]:
-            sensor_states[sensor_id]["state"] = "LOW"
-            sensor_states[sensor_id]["timestamp"] = current_time
-    elif sensor_states[sensor_id] == "HIGH":
-        if value <= sensor_alarm_values[sensor_id]["LOW"]:
-            sensor_states[sensor_id]["state"] = "LOW"
-            sensor_states[sensor_id]["timestamp"] = current_time
-        if sensor_alarm_values[sensor_id]["HIGH"] > value > sensor_alarm_values[sensor_id]["LOW"]:
-            sensor_states[sensor_id]["state"] = "NORMAL"
-            sensor_states[sensor_id]["timestamp"] = current_time
-    elif sensor_states[sensor_id] == "LOW":
-        if value >= sensor_alarm_values[sensor_id]["HIGH"]:
-            sensor_states[sensor_id]["state"] = "HIGH"
-            sensor_states[sensor_id]["timestamp"] = current_time
-        if sensor_alarm_values[sensor_id]["HIGH"] > value > sensor_alarm_values[sensor_id]["LOW"]:
-            sensor_states[sensor_id]["state"] = "NORMAL"
-            sensor_states[sensor_id]["timestamp"] = current_time
 
-def check_alarms(sensor_id, value, current_time):
-    """ Check if an alarm condition is met based on the sensor's state and duration """
-    set_sensor_state(sensor_id, value, current_time)
+def check_timers():
+    """Periodically check timers to handle cases where sensors stop sending data."""
+    while True:
+        current_time = datetime.now()
+        for sensor_id in list(sensor_timers_x.keys()):
+            elapsed_time_x = (current_time - sensor_timers_x[sensor_id]).seconds
+            if elapsed_time_x >= THRESHOLD_X and not sensor_flags_x.get(sensor_id, False):
+                sensor_flags_x[sensor_id] = True
+                print(f"Flag X set for sensor {sensor_id}. Alarm triggered for X.")
+                log_alarm(sensor_id, "HIGH-X", datetime.now())
+                del sensor_timers_x[sensor_id]
 
-    # Calculate the time the sensor has been in the current state
-    last_timestamp = sensor_states[sensor_id]["timestamp"]
-    duration = (current_time - last_timestamp).total_seconds()
+        for sensor_id in list(sensor_timers_y.keys()):
+            elapsed_time_y = (current_time - sensor_timers_y[sensor_id]).seconds
+            if elapsed_time_y >= THRESHOLD_Y and not sensor_flags_y.get(sensor_id, False):
+                sensor_flags_y[sensor_id] = True
+                print(f"Flag Y set for sensor {sensor_id}. Alarm triggered for Y.")
+                log_alarm(sensor_id, "HIGH-Y", datetime.now())
+                del sensor_timers_y[sensor_id]
 
-    # If sensor is in "HIGH" or "LOW" state, check for alarm thresholds
-    if sensor_states[sensor_id]["state"] != "NORMAL":
-        if duration > THRESHOLD_X and not sensor_send_alarm.get(sensor_id, {}).get("send"):
-            sensor_send_alarm[sensor_id] = {"send": 1, "alarm": sensor_states[sensor_id]["state"], "type": "X"}
-            log_alarm(sensor_id, "X", current_time)
+        time.sleep(0.5)  # Check every second/2
 
-        if duration > THRESHOLD_Y and not sensor_send_alarm.get(sensor_id, {}).get("send"):
-            sensor_send_alarm[sensor_id] = {"send": 1, "alarm": sensor_states[sensor_id]["state"], "type": "Y"}
-            log_alarm(sensor_id, "Y", current_time)
 
 # MQTT on_message handler
 def on_message(client, userdata, msg):
@@ -113,9 +119,7 @@ def on_message(client, userdata, msg):
         time = datetime.strptime(timestamp, format_string)
         print(f"{time} {measurement}")
 
-        # Check for alarm conditions
-        check_alarms(sensor_id, measurement, time)
-
+        check_high(sensor_id, measurement, time)
         # Save the measurement in the database
         handle_measurement(sensor_id, measurement, time)
 
@@ -130,6 +134,8 @@ def start_subscription():
     client.on_message = on_message
     client.connect(BROKER_IP)
     client.subscribe("ii24/" + str(GROUP_ID) + "/sensor/#")  # Subscribe to all sensors
+
+    threading.Thread(target=check_timers, daemon=True).start()
 
     try:
         rc = 0
