@@ -8,6 +8,7 @@ import mqtt as mqtt_handler
 import db
 import json
 
+from web_service.objects import State
 
 app = Flask(__name__)
 threadStarted=False
@@ -61,6 +62,28 @@ def get_measurements_by_time_and_sensor_id(sensor_id):
             return db.get_measurements_of_sensor_from(sensor_id, from_date)
         else:
             return db.get_measurements_of_sensor_in_time_range(sensor_id, from_date, to_date)
+    except ValueError:
+        return "Invalid sensor id"
+
+@app.route('/sensors/<sensor_id>/kpi', methods=['POST'])
+def get_kpi_of_sensor(sensor_id):
+    request_data = request.get_json()
+    try:
+        sensor_id = int(sensor_id)
+        from_date = request_data['from']
+        to_date = request_data['to']
+
+        total = db.count_measurements_of_sensor_in_time_range(sensor_id, from_date, to_date)
+        low = db.count_measurements_of_sensor_in_time_range(sensor_id, from_date, to_date, state=State.LOW)
+        high = db.count_measurements_of_sensor_in_time_range(sensor_id, from_date, to_date, state=State.HIGH)
+        normal = db.count_measurements_of_sensor_in_time_range(sensor_id, from_date, to_date, state=State.NORMAL)
+
+        low_percentage = (low / total) * 100 if total else 0
+        normal_percentage = (normal / total) * 100 if total else 0
+        high_percentage = (high / total) * 100 if total else 0
+
+        return {"low": low_percentage, "normal": normal_percentage, "high": high_percentage}
+
     except ValueError:
         return "Invalid sensor id"
 

@@ -186,12 +186,23 @@
             });
         }
 
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+
         // Fetch filtered KPI data for pie chart and alarms table for selected sensor
         function fetchKPIData() {
             const sensor = document.getElementById('sensorFilter').value;  // Get selected sensor
             const priority = document.getElementById('priorityFilter').value;
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
+            let startDate = document.getElementById('startDate').value;
+            let endDate = document.getElementById('endDate').value;
 
             if (startDate.length === 0){
                 startDate = null
@@ -203,7 +214,7 @@
             }else{
                 endDate = formatDate(endDate)
             }
-            console.log(sensorId)
+            console.log(sensor)
             console.log(startDate)
             console.log(endDate)
             if (startDate === null && endDate === null) {
@@ -212,7 +223,7 @@
             }
 
             // API request for KPI and alarm data for the selected sensor
-            const url = `http://127.0.0.1:5000/alarms/${sensor}/byTime`;
+            const url = `http://127.0.0.1:5000/sensors/${sensor}/kpi`;
             const requestBody = {
                 from: startDate, // Replace x with the actual value
                 to: endDate,    // Replace y with the actual value
@@ -228,8 +239,8 @@
                     try {
                         console.log(data)
                         // const parsedData = JSON.parse(data);
-                        updateKPIChart(data.kpis);
-                        updateAlarmsTable(data.alarms);
+                        updateKPIChart(data);
+                        // updateAlarmsTable(data.alarms);
                     } catch (err) {
                         console.error("Error parsing data:", err);
                     }
@@ -242,12 +253,7 @@
 
         // Update the KPI Pie Chart with data
         function updateKPIChart(data) {
-            const total = data.Low + data.Normal + data.high;
-            const lowPercentage = (data.low / total) * 100 || 0;
-            const normalPercentage = (data.normal / total) * 100 || 0;
-            const highPercentage = (data.high / total) * 100 || 0;
-
-            kpiPieChart.data.datasets[0].data = [lowPercentage, normalPercentage, highPercentage];
+            kpiPieChart.data.datasets[0].data = [data.low, data.normal, data.high];
             kpiPieChart.update();
         }
 

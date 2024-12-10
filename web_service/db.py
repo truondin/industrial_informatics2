@@ -1,6 +1,8 @@
 import datetime
 import sqlite3
 
+from web_service.objects import Measurement
+
 DB_NAME = "database.db"
 
 
@@ -18,17 +20,21 @@ def _get_connection():
 
 
 # CREATE
-def insert_sensor(id):
+def insert_sensor(id, low, high):
     with _get_connection() as conn:
         c = conn.cursor()
-        c.execute("INSERT INTO sensor VALUES (:id)", {'id': id})
+        c.execute("INSERT INTO sensors VALUES (:id, :low, :high)", {'id': id, 'low': low, 'high': high})
 
 
-def insert_measurement(sensor_id, value, timestamp):
+def insert_measurement(measurement: Measurement):
     with _get_connection() as conn:
         c = conn.cursor()
-        c.execute("INSERT INTO measurement VALUES (:id ,:sensor_id, :value, :time)",
-                  {'id': None, 'sensor_id': sensor_id, 'value': value, 'time': timestamp})
+        c.execute("INSERT INTO measurements VALUES (:id ,:sensor_id, :value, :time, :state)",
+                  {'id': None,
+                   'sensor_id': measurement.sensor_id,
+                   'value': measurement.value,
+                   'time': measurement.time,
+                   'state': measurement.state.value})
 
 def insert_alarm(sensor_id, state, alarm_level, timestamp, message):
     with _get_connection() as conn:
@@ -43,7 +49,7 @@ def insert_alarm(sensor_id, state, alarm_level, timestamp, message):
 def sensor_exists(sensor_id):
     with _get_connection() as conn:
         c = conn.cursor()
-        c.execute("SELECT COUNT(*) FROM sensor WHERE id = :id", {'id': sensor_id})
+        c.execute("SELECT COUNT(*) FROM sensors WHERE id = :id", {'id': sensor_id})
         count = c.fetchone()['COUNT(*)']  # Using dict_factory for row mapping
         return count > 0
 
@@ -51,15 +57,18 @@ def sensor_exists(sensor_id):
 def create_db():
     with _get_connection() as conn:
         c = conn.cursor()
-        c.execute("""CREATE TABLE IF NOT EXISTS sensor (
-                     id INTEGER PRIMARY KEY
+        c.execute("""CREATE TABLE IF NOT EXISTS sensors (
+                     id INTEGER PRIMARY KEY,
+                     low_threshold INTEGER,
+                     high_threshold INTEGER
                      );""")
 
-        c.execute("""CREATE TABLE IF NOT EXISTS measurement (
+        c.execute("""CREATE TABLE IF NOT EXISTS measurements (
                      id INTEGER PRIMARY KEY AUTOINCREMENT,
                      sensor_id INTEGER,
                      value FLOAT,
-                     time TIMESTAMP
+                     time TIMESTAMP,
+                     state INTEGER
                      );""")
         # Create alarms table
         c.execute("""CREATE TABLE IF NOT EXISTS alarms (
@@ -72,17 +81,29 @@ def create_db():
                      FOREIGN KEY(sensor_id) REFERENCES sensor(id)
                      );""")
 
+        insert_sensor(1, 5, 20)
+        insert_sensor(2, -30, 30)
+        insert_sensor(3, -7, -1)
+        insert_sensor(4, -10, 10)
+        insert_sensor(5, -5, 15)
+        insert_sensor(6, -10, 5)
+        insert_sensor(7, 10, 20)
+        insert_sensor(8, -15, 25)
+        insert_sensor(9, -20, -5)
+        insert_sensor(10, -8, 12)
+
+
 def get_all_measurements():
     with _get_connection() as conn:
         c = conn.cursor()
-        c.execute("SELECT * FROM measurement")
+        c.execute("SELECT * FROM measurements")
         return c.fetchall()
 
 
 def get_measurements_by_sensor_id(sensor_id):
     with _get_connection() as conn:
         c = conn.cursor()
-        c.execute("SELECT * FROM measurement WHERE sensor_id=:id ORDER BY measurement.time DESC", {'id': sensor_id})
+        c.execute("SELECT * FROM measurements WHERE sensor_id=:id ORDER BY time DESC", {'id': sensor_id})
         return c.fetchall()
 
 def get_all_sensors():
@@ -91,6 +112,12 @@ def get_all_sensors():
         c.execute("SELECT * FROM sensors")
         return c.fetchall()
 
+def get_sensor(sensor_id):
+    with _get_connection() as conn:
+        c = conn.cursor()
+        c.execute("SELECT * FROM sensors WHERE id=:id", {'id': sensor_id})
+        return c.fetchone()
+
 
 def get_measurements_in_time_range(start_time, end_time):
     start_time = datetime.datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
@@ -98,7 +125,7 @@ def get_measurements_in_time_range(start_time, end_time):
     with _get_connection() as conn:
         c = conn.cursor()
         query = """
-        SELECT * FROM measurement
+        SELECT * FROM measurements
         WHERE time BETWEEN :start_time AND :end_time       
         ORDER BY time DESC
         """
@@ -111,7 +138,7 @@ def get_measurements_until(date):
     with _get_connection() as conn:
         c = conn.cursor()
         query = """
-        SELECT * FROM measurement
+        SELECT * FROM measurements
         WHERE time <= :date       
         ORDER BY time DESC
         """
@@ -124,7 +151,7 @@ def get_measurements_from(date):
     with _get_connection() as conn:
         c = conn.cursor()
         query = """
-        SELECT * FROM measurement
+        SELECT * FROM measurements
         WHERE time >= :date       
         ORDER BY time DESC
         """
@@ -138,7 +165,7 @@ def get_measurements_of_sensor_in_time_range(sensor_id, start_time, end_time):
     with _get_connection() as conn:
         c = conn.cursor()
         query = """
-        SELECT * FROM measurement
+        SELECT * FROM measurements
         WHERE sensor_id=:sensor_id AND time BETWEEN :start_time AND :end_time
         ORDER BY time DESC
         """
@@ -151,7 +178,7 @@ def get_measurements_of_sensor_until(sensor_id, date):
     with _get_connection() as conn:
         c = conn.cursor()
         query = """
-        SELECT * FROM measurement
+        SELECT * FROM measurements
         WHERE sensor_id=:sensor_id AND time <= :date
         ORDER BY time DESC
         """
@@ -164,12 +191,34 @@ def get_measurements_of_sensor_from(sensor_id, date):
     with _get_connection() as conn:
         c = conn.cursor()
         query = """
-        SELECT * FROM measurement
+        SELECT * FROM measurements
         WHERE sensor_id=:sensor_id AND time >= :date       
         ORDER BY time DESC
         """
         c.execute(query, {'sensor_id': sensor_id, 'date': date})
         return c.fetchall()
+
+
+def count_measurements_of_sensor_in_time_range(sensor_id, start_time, end_time, state=None):
+    start_time = datetime.datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
+    end_time = datetime.datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")
+    with _get_connection() as conn:
+        c = conn.cursor()
+        if state is None:
+            query = """
+            SELECT COUNT(*) FROM measurements
+            WHERE sensor_id=:sensor_id AND time BETWEEN :start_time AND :end_time
+            """
+            c.execute(query, {'sensor_id': sensor_id, 'start_time': start_time, 'end_time': end_time})
+        else:
+            query = """
+            SELECT COUNT(*) FROM measurements
+            WHERE sensor_id=:sensor_id AND state=:state AND time BETWEEN :start_time AND :end_time
+            """
+            c.execute(query, {'sensor_id': sensor_id, 'state': state.value, 'start_time': start_time, 'end_time': end_time})
+        count = c.fetchone()['COUNT(*)']
+        return count
+
 
 def get_alarms_by_sensor_id(sensor_id):
     with _get_connection() as conn:

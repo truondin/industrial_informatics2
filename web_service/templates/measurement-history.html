@@ -203,6 +203,7 @@
                     try {
                         console.log(data)
                         // const parsedData = JSON.parse(data);
+                        data.reverse()
                         updateHistoricalChart(data);
                     } catch (err) {
                         console.error("Error parsing data:", err);

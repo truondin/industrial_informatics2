@@ -3,6 +3,8 @@ import paho.mqtt.client as mqtt
 import db
 import json
 
+from web_service.objects import Measurement, State
+
 GROUP_ID = 420
 BROKER_IP = "34.255.214.243"
 
@@ -15,12 +17,29 @@ sensor_states = {}  # Format: {sensor_id: {"state": "HIGH/LOW/NORMAL", "timestam
 sensor_alarm_values = {}  # Format: {sensor_id: {"HIGH": high_value, "LOW": low_value}}
 sensor_send_alarm = {}  # Format: {sensor_id: {"send": 0/1, "alarm": "HIGH/LOW", "type": "X/Y"}}
 
-def save_in_db(sensor_id, measurement, timestamp):
+
+def get_sensor_state(sensor_id, value):
+    sensor = db.get_sensor(sensor_id)
+    low = sensor['low_threshold']
+    high = sensor['high_threshold']
+    if value < low:
+        return State.LOW
+    elif value > high:
+        return State.HIGH
+    else:
+        return State.NORMAL
+
+
+def handle_measurement(sensor_id, measurement, timestamp):
     """ Save the sensor measurement in the database """
     print(f"sensor_id: {sensor_id} measurement: {str(measurement)}")
     if not db.sensor_exists(sensor_id):
-        db.insert_sensor(sensor_id)
-    db.insert_measurement(sensor_id, measurement, timestamp)
+        db.insert_sensor(sensor_id, 5, 15) # dummy low/high values
+
+    state = get_sensor_state(sensor_id, measurement)
+    measurement = Measurement(sensor_id, measurement, timestamp, state)
+
+    db.insert_measurement(measurement)
 
 def log_alarm(sensor_id, alarm_type, current_time):
     """ Log the alarm into the database """
@@ -98,7 +117,7 @@ def on_message(client, userdata, msg):
         check_alarms(sensor_id, measurement, time)
 
         # Save the measurement in the database
-        save_in_db(sensor_id, measurement, time)
+        handle_measurement(sensor_id, measurement, time)
 
     except ValueError:
         print(f"Error: Invalid payload {payload} - expecting float")
