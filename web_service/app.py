@@ -153,10 +153,6 @@ def getRobotLatestState(rID):
 
 
 if __name__ == '__main__':
-    try:
-        startThreads()
-        db.create_db()
-        app.run()
-    finally:
-        print("Stopping web service")
-        quit()
+    startThreads()
+    db.create_db()
+    app.run()

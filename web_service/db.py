@@ -81,16 +81,22 @@ def create_db():
                      FOREIGN KEY(sensor_id) REFERENCES sensor(id)
                      );""")
 
-        insert_sensor(1, 5, 20)
-        insert_sensor(2, -30, 30)
-        insert_sensor(3, -7, -1)
-        insert_sensor(4, -10, 10)
-        insert_sensor(5, -5, 15)
-        insert_sensor(6, -10, 5)
-        insert_sensor(7, 10, 20)
-        insert_sensor(8, -15, 25)
-        insert_sensor(9, -20, -5)
-        insert_sensor(10, -8, 12)
+        thresholds = [
+            (5, 20),
+            (-30, 30),
+            (-7, -1),
+            (-10, 10),
+            (-5, 15),
+            (-10, 5),
+            (10, 20),
+            (-15, 25),
+            (-20, -5),
+            (-8, 12)
+        ]
+        for i in range(len(thresholds)):
+            low, high = thresholds[i]
+            if not sensor_exists(i+1):
+                insert_sensor(i+1, low, high)
 
 
 def get_all_measurements():
