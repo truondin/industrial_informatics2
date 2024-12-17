@@ -8,7 +8,7 @@ import mqtt as mqtt_handler
 import db
 import json
 
-from web_service.objects import State, Measurement
+from objects import State, Measurement
 
 app = Flask(__name__)
 threadStarted=False
@@ -24,7 +24,7 @@ def helloWorld():
 def get_measurements_by_sensor_id(sensor_id):
     try:
         sensor_id = int(sensor_id)
-        return db.get_measurements_by_sensor_id(sensor_id)
+        return db.get_measurements_by_sensor_id_limit(sensor_id)
     except ValueError:
         return "Invalid sensor id"
 
@@ -192,6 +192,12 @@ def getRobotLatestState(rID):
         robot_data.append({"currentState": currentState, "lastTimeConnected": current_time, "value": value})
     return json.dumps(robot_data)
 
+
+
+@app.route('/startSubscription', methods=['GET'])
+def start_subscription():
+    startThreads()
+    return "MQTT subscription started"
 
 
 if __name__ == '__main__':

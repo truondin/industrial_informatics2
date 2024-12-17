@@ -188,7 +188,7 @@
             }
 
             // Fetch data from the backend API
-            const url = `http://127.0.0.1:5000/sensors/${sensorId}/measurements/byTime`;
+            const url = `https://yellow-island-5b133cd0ff5345f29d63812ca57f3bc6.azurewebsites.net/sensors/${sensorId}/measurements/byTime`;
             const requestBody = {
                 from: startDate, // Replace x with the actual value
                 to: endDate    // Replace y with the actual value
@@ -203,6 +203,7 @@
                     try {
                         console.log(data)
                         // const parsedData = JSON.parse(data);
+                        data.reverse()
                         updateHistoricalChart(data);
                     } catch (err) {
                         console.error("Error parsing data:", err);

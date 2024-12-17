@@ -186,7 +186,7 @@
 
         // Fetch real-time data manually (Get Remote Data button)
         function getRemoteData(i) {
-            $.get("http://127.0.0.1:5000/sensors/" + (i + 1) + "/measurements", function (data) {
+            $.get("https://yellow-island-5b133cd0ff5345f29d63812ca57f3bc6.azurewebsites.net/sensors/" + (i + 1) + "/measurements", function (data) {
                 console.log("Remote data of "+(i + 1)+" fetched successfully:", data);
                 data = data.slice(0, 20)
                 data = data.reverse()

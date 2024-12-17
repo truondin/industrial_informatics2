@@ -5,7 +5,7 @@ import json
 import time
 import threading
 
-from web_service.objects import Measurement, State
+from objects import Measurement, State
 
 GROUP_ID = 420
 BROKER_IP = "34.255.214.243"
@@ -13,8 +13,6 @@ BROKER_IP = "34.255.214.243"
 # Thresholds for alarm detection
 THRESHOLD_X = 4  # Threshold for HIGH level (in seconds)
 THRESHOLD_Y = 4  # Threshold for LOW level (in seconds)
-
-HIGH_THRESHOLD = 55
 
 sensor_timers_x = {}  # Format: {sensor_id: start_time} (for HIGH)
 sensor_timers_y = {}  # Format: {sensor_id: start_time} (for LOW)
@@ -61,21 +59,13 @@ def check_high(sensor_id, measurement, current_time):
         if sensor_id not in sensor_timers_x:
             sensor_timers_x[sensor_id] = current_time
             print(f"Threshold exceeded for sensor {sensor_id}. Timer X started.")
-        if sensor_id not in sensor_timers_y:
-            sensor_timers_y[sensor_id] = current_time
-            print(f"Threshold exceeded for sensor {sensor_id}. Timer Y started.")
     else:
         # Reset timers and flags if the value drops below the threshold
         if sensor_id in sensor_timers_x:
             del sensor_timers_x[sensor_id]
             print(f"Timer X reset for sensor {sensor_id}.")
-        if sensor_id in sensor_timers_y:
-            del sensor_timers_y[sensor_id]
-            print(f"Timer Y reset for sensor {sensor_id}.")
         if sensor_id in sensor_flags_x:
             sensor_flags_x[sensor_id] = False
-        if sensor_id in sensor_flags_y:
-            sensor_flags_y[sensor_id] = False
 
 # Check if the sensor's value falls below the LOW threshold
 def check_low(sensor_id, measurement, current_time):

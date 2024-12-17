@@ -23,7 +23,7 @@ END_VAR
 	nHighDuration:=T#5S, 
 	nLowDuration:=T#5S,
 	nRandomizerSeedValue := 10, 
-	delayTimeAfterAddOrSub :=T#100MS,
+	delayTimeAfterAddOrSub :=T#1000MS,
 	nStepValueMult :=1,
 	// Measurement value
 	nMeasValue=>GVL.nMeasurement1);
@@ -34,7 +34,7 @@ fb_Measurement2(
 	nHighDuration:=T#5S, 
 	nLowDuration:=T#5S,
 	nRandomizerSeedValue := 7, 
-	delayTimeAfterAddOrSub :=T#100MS,
+	delayTimeAfterAddOrSub :=T#1000MS,
 	nStepValueMult :=0.1,
 	nMeasValue=>GVL.nMeasurement2);
 	
@@ -44,7 +44,7 @@ fb_Measurement3(
 	nHighDuration:=T#5S, 
 	nLowDuration:=T#5S,
 	nRandomizerSeedValue := 42, 
-	delayTimeAfterAddOrSub :=T#100MS,
+	delayTimeAfterAddOrSub :=T#1000MS,
 	nStepValueMult :=0.01,
 	nMeasValue=>GVL.nMeasurement3);
 
@@ -54,7 +54,7 @@ fb_Measurement4(
     nHighDuration:=T#5S, 
     nLowDuration:=T#5S, 
     nRandomizerSeedValue:=5, 
-    delayTimeAfterAddOrSub:=T#100MS, 
+    delayTimeAfterAddOrSub:=T#1000MS, 
     nStepValueMult:=0.2, 
     nMeasValue=>GVL.nMeasurement4);
 
@@ -64,7 +64,7 @@ fb_Measurement5(
     nHighDuration:=T#5S, 
     nLowDuration:=T#5S, 
     nRandomizerSeedValue:=25, 
-    delayTimeAfterAddOrSub:=T#100MS, 
+    delayTimeAfterAddOrSub:=T#1000MS, 
     nStepValueMult:=0.15, 
     nMeasValue=>GVL.nMeasurement5);
 
@@ -74,7 +74,7 @@ fb_Measurement6(
     nHighDuration:=T#5S, 
     nLowDuration:=T#5S, 
     nRandomizerSeedValue:=30, 
-    delayTimeAfterAddOrSub:=T#100MS, 
+    delayTimeAfterAddOrSub:=T#1000MS, 
     nStepValueMult:=0.05, 
     nMeasValue=>GVL.nMeasurement6);
 
@@ -84,7 +84,7 @@ fb_Measurement7(
     nHighDuration:=T#5S, 
     nLowDuration:=T#5S, 
     nRandomizerSeedValue:=35, 
-    delayTimeAfterAddOrSub:=T#100MS, 
+    delayTimeAfterAddOrSub:=T#1000MS, 
     nStepValueMult:=0.25, 
     nMeasValue=>GVL.nMeasurement7);
 
@@ -94,7 +94,7 @@ fb_Measurement8(
     nHighDuration:=T#5S, 
     nLowDuration:=T#5S, 
     nRandomizerSeedValue:=45, 
-    delayTimeAfterAddOrSub:=T#100MS, 
+    delayTimeAfterAddOrSub:=T#1000MS, 
     nStepValueMult:=0.1, 
     nMeasValue=>GVL.nMeasurement8);
 
@@ -104,7 +104,7 @@ fb_Measurement9(
     nHighDuration:=T#5S, 
     nLowDuration:=T#5S, 
     nRandomizerSeedValue:=50, 
-    delayTimeAfterAddOrSub:=T#100MS, 
+    delayTimeAfterAddOrSub:=T#1000MS, 
     nStepValueMult:=0.02, 
     nMeasValue=>GVL.nMeasurement9);
 
@@ -114,7 +114,7 @@ fb_Measurement10(
     nHighDuration:=T#5S, 
     nLowDuration:=T#5S, 
     nRandomizerSeedValue:=60, 
-    delayTimeAfterAddOrSub:=T#100MS, 
+    delayTimeAfterAddOrSub:=T#1000MS, 
     nStepValueMult:=0.12, 
     nMeasValue=>GVL.nMeasurement10);]]></ST>
     </Implementation>

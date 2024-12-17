@@ -1,7 +1,7 @@
 import datetime
 import sqlite3
 
-from web_service.objects import Measurement
+from objects import Measurement
 
 DB_NAME = "database.db"
 
@@ -109,6 +109,12 @@ def get_measurements_by_sensor_id(sensor_id):
     with _get_connection() as conn:
         c = conn.cursor()
         c.execute("SELECT * FROM measurements WHERE sensor_id=:id ORDER BY time DESC", {'id': sensor_id})
+        return c.fetchall()
+
+def get_measurements_by_sensor_id_limit(sensor_id):
+    with _get_connection() as conn:
+        c = conn.cursor()
+        c.execute("SELECT * FROM measurements WHERE sensor_id=:id ORDER BY time DESC LIMIT 25", {'id': sensor_id})
         return c.fetchall()
 
 def get_all_sensors():
