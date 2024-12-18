@@ -36,6 +36,7 @@ def insert_measurement(measurement: Measurement):
                    'time': measurement.time,
                    'state': measurement.state.value})
 
+
 def insert_alarm(sensor_id, alarm_level, timestamp, message):
     with _get_connection() as conn:
         c = conn.cursor()
@@ -43,7 +44,6 @@ def insert_alarm(sensor_id, alarm_level, timestamp, message):
         INSERT INTO alarms (sensor_id, alarm_level, timestamp, message)
         VALUES (:sensor_id, :alarm_level, :timestamp, :message)
         """, {'sensor_id': sensor_id, 'alarm_level': alarm_level, 'timestamp': timestamp, 'message': message})
-
 
 
 def sensor_exists(sensor_id):
@@ -92,10 +92,15 @@ def create_db():
             (-20, -5),
             (-8, 12)
         ]
+
+        # dummy sensor add
+        if not sensor_exists(0):
+            insert_sensor(0, 5, 10)
+
         for i in range(len(thresholds)):
             low, high = thresholds[i]
-            if not sensor_exists(i+1):
-                insert_sensor(i+1, low, high)
+            if not sensor_exists(i + 1):
+                insert_sensor(i + 1, low, high)
 
 
 def get_all_measurements():
@@ -111,17 +116,20 @@ def get_measurements_by_sensor_id(sensor_id):
         c.execute("SELECT * FROM measurements WHERE sensor_id=:id ORDER BY time DESC", {'id': sensor_id})
         return c.fetchall()
 
+
 def get_measurements_by_sensor_id_limit(sensor_id):
     with _get_connection() as conn:
         c = conn.cursor()
         c.execute("SELECT * FROM measurements WHERE sensor_id=:id ORDER BY time DESC LIMIT 25", {'id': sensor_id})
         return c.fetchall()
 
+
 def get_all_sensors():
     with _get_connection() as conn:
         c = conn.cursor()
         c.execute("SELECT * FROM sensors")
         return c.fetchall()
+
 
 def get_sensor(sensor_id):
     with _get_connection() as conn:
@@ -178,7 +186,6 @@ def get_measurements_of_sensor_in_time_range(sensor_id, start_time, end_time):
         query = """
         SELECT * FROM measurements
         WHERE sensor_id=:sensor_id AND time BETWEEN :start_time AND :end_time
-        ORDER BY time DESC
         """
         c.execute(query, {'sensor_id': sensor_id, 'start_time': start_time, 'end_time': end_time})
         return c.fetchall()
@@ -226,7 +233,8 @@ def count_measurements_of_sensor_in_time_range(sensor_id, start_time, end_time, 
             SELECT COUNT(*) FROM measurements
             WHERE sensor_id=:sensor_id AND state=:state AND time BETWEEN :start_time AND :end_time
             """
-            c.execute(query, {'sensor_id': sensor_id, 'state': state.value, 'start_time': start_time, 'end_time': end_time})
+            c.execute(query,
+                      {'sensor_id': sensor_id, 'state': state.value, 'start_time': start_time, 'end_time': end_time})
         count = c.fetchone()['COUNT(*)']
         return count
 
@@ -241,6 +249,7 @@ def get_alarms_by_sensor_id(sensor_id):
         """, {'sensor_id': sensor_id})
         return c.fetchall()
 
+
 def get_alarms_in_time_range(sensor_id, from_date, to_date):
     from_date = datetime.datetime.strptime(from_date, "%Y-%m-%d %H:%M:%S")
     to_date = datetime.datetime.strptime(to_date, "%Y-%m-%d %H:%M:%S")
@@ -254,3 +263,9 @@ def get_alarms_in_time_range(sensor_id, from_date, to_date):
         c.execute(query, {'sensor_id': sensor_id, 'from_date': from_date, 'to_date': to_date})
         return c.fetchall()
 
+
+def get_latest_measurement_by_sensor_id(sensor_id):
+    with _get_connection() as conn:
+        c = conn.cursor()
+        c.execute("SELECT * FROM measurements WHERE sensor_id=:id ORDER BY time DESC LIMIT 1", {'id': sensor_id})
+        return c.fetchone()

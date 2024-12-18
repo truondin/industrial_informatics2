@@ -103,12 +103,12 @@ def get_mean_time_between_failures_of_sensor(sensor_id):
             measurements.append(Measurement(d['sensor_id'], d['value'], datetime.strptime(d['time'], "%Y-%m-%d %H:%M:%S"), State(d['state'])))
 
         result = 0
-        prev = measurements[0]
+        prev = measurements[-1]
         checkpoint = None
         find_high = True
         if prev.state == State.HIGH:
             find_high = False
-        for i in range(1, len(measurements)):
+        for i in range(len(measurements) - 2, -1, -1):
             curr = measurements[i]
             if find_high:
                 if curr.state == State.HIGH and prev.state != State.HIGH:
@@ -199,6 +199,10 @@ def start_subscription():
     startThreads()
     return "MQTT subscription started"
 
+@app.route('/startDatabase', methods=['GET'])
+def start_database():
+    db.create_db()
+    return "Database created"
 
 if __name__ == '__main__':
     startThreads()
