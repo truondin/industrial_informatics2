@@ -34,7 +34,7 @@ def get_all_measurements():
     return db.get_all_measurements()
 
 
-@app.route('/sensors/all/measurements/byTime', methods=['GET'])
+@app.route('/sensors/all/measurements/byTime', methods=['POST'])
 def get_measurements_by_time():
     request_data = request.get_json()
     from_date = request_data['from']
@@ -124,12 +124,18 @@ def get_mean_time_between_failures_of_sensor(sensor_id):
                         checkpoint = prev.time
 
             prev = curr
+
+        if checkpoint is not None:
+            delta = checkpoint - measurements[0].time
+            print(checkpoint)
+            result += delta.total_seconds()
+
         return {'failuresMeanTime': result}
 
     except ValueError:
         return "Invalid sensor id"
 
-@app.route('/alarms/<sensor_id>', methods=['GET'])
+@app.route('/sensors/<sensor_id>/alarms', methods=['GET'])
 def get_alarms_by_sensor_id(sensor_id):
     try:
         sensor_id = int(sensor_id)
@@ -138,7 +144,7 @@ def get_alarms_by_sensor_id(sensor_id):
     except ValueError:
         return {"error": "Invalid sensor ID"}, 400
 
-@app.route('/alarms/<sensor_id>/byTime', methods=['POST'])
+@app.route('/sensors/<sensor_id>/alarms/byTime', methods=['POST'])
 def get_alarms_by_sensor_and_time(sensor_id):
     try:
         sensor_id = int(sensor_id)
@@ -176,22 +182,6 @@ def startThreads():
 def static_page(page_name):
     nID = request.args.get('nID')
     return render_template('%s.html' % page_name,nID=nID)
-
-
-@app.route('/robots/<rID>/latest', methods=['GET'])
-def getRobotLatestState(rID):
-    possibleStates = ["ACTIVE", "IDLE", "DOWN"]
-
-    now = datetime.now()
-
-    current_time = now.strftime("%H:%M:%S")
-    robot_data = []
-    for i in range(10):
-        currentState = random.choice(possibleStates)
-        value = random.randint(0, 100)
-        robot_data.append({"currentState": currentState, "lastTimeConnected": current_time, "value": value})
-    return json.dumps(robot_data)
-
 
 
 @app.route('/startSubscription', methods=['GET'])

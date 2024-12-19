@@ -4,7 +4,18 @@ import sqlite3
 from objects import Measurement
 
 DB_NAME = "database.db"
-
+thresholds = [
+    (5, 20),
+    (-30, 30),
+    (-7, -1),
+    (-10, 10),
+    (-5, 15),
+    (-10, 5),
+    (10, 20),
+    (-15, 25),
+    (-20, -5),
+    (-8, 12)
+]
 
 def _dict_factory(cursor, row):
     d = {}
@@ -68,7 +79,8 @@ def create_db():
                      sensor_id INTEGER,
                      value FLOAT,
                      time TIMESTAMP,
-                     state INTEGER
+                     state INTEGER,
+                     FOREIGN KEY(sensor_id) REFERENCES sensor(id)
                      );""")
         # Create alarms table
         c.execute("""CREATE TABLE IF NOT EXISTS alarms (
@@ -79,19 +91,6 @@ def create_db():
                      message TEXT,
                      FOREIGN KEY(sensor_id) REFERENCES sensor(id)
                      );""")
-
-        thresholds = [
-            (5, 20),
-            (-30, 30),
-            (-7, -1),
-            (-10, 10),
-            (-5, 15),
-            (-10, 5),
-            (10, 20),
-            (-15, 25),
-            (-20, -5),
-            (-8, 12)
-        ]
 
         # dummy sensor add
         if not sensor_exists(0):

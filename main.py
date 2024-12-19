@@ -37,14 +37,17 @@ class EventHandler(object):
         self.client = client
         self.sensor_id = sensor_id
 
+    def create_mqtt_message(self, value):
+        measurement = round(value, AMOUNT_OF_DIGITS)
+        format_string = "%Y-%m-%d %H:%M:%S"
+        timestamp = datetime.now()
+        return {'value': measurement, 'timestamp': timestamp.strftime(format_string)}
+
     # event handler function
     def datachange_notification(self, node, val, data):
         print(node, round(val, AMOUNT_OF_DIGITS))
 
-        measurement = round(val, AMOUNT_OF_DIGITS)
-        format_string = "%Y-%m-%d %H:%M:%S"
-        timestamp = datetime.now()
-        value = {'value': measurement, 'timestamp': timestamp.strftime(format_string)}
+        value = self.create_mqtt_message(val)
 
         self.client.publish("ii24/" + str(GROUP_ID) + "/sensor/" + str(self.sensor_id), json.dumps(value))
 

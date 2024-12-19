@@ -251,7 +251,7 @@
             });
 
             // Fetch alarm data for the selected sensor
-            const alarmUrl = `https://yellow-island-5b133cd0ff5345f29d63812ca57f3bc6.azurewebsites.net/alarms/${sensor}/byTime`;
+            const alarmUrl = `https://yellow-island-5b133cd0ff5345f29d63812ca57f3bc6.azurewebsites.net/sensors/${sensor}/alarm/byTime`;
             $.ajax({
                 url: alarmUrl,
                 method: "POST", // Use POST to send a request body
